@@ -3,6 +3,9 @@ from configparser import ConfigParser
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
+from database import Database
+
+db = Database()
 
 token = '895938816:AAEe0YkgUOjoOmQjvYEiErYBFxA9qhcChMY'
 PORT = int(os.environ.get('PORT', '8443'))
@@ -18,15 +21,35 @@ def help(bot, update):
     update.message.reply_text('Help is for the weak. Try harder \U0001F60A')
 
 def remind(bot, update):
-    input = update.message.text.split(' ')[1]
-    update.message.reply_text('You can go and remind yourself about ' + input +  '\U0001F60A')
+    input = update.message.text[8:]
+    reminders = db.get_items()
+    if input in reminders:
+        pass
+    else:
+        db.add_item(input)
+        reminders = db.get_items()
+    message = "\n".join(reminders)
+    update.message.reply_text(message)
+
+def delete(bot, update):
+    input = update.message.text[8:]
+    try:
+        db.delete_item(input)
+        update.message.reply_text('`' + input + '`' + ' deleted')
+    except KeyError:
+        pass
+    reminders = db.get_items()
+    message = "\n".join(reminders)
+    update.message.reply_text(message)
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
+    print ('Update "%s" caused error "%s"', update, error)
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 def main():
     """Deployment"""
+    db.setup()
     updater = Updater(token)
     updater.start_webhook(listen="0.0.0.0",
                       port=PORT,
@@ -34,15 +57,17 @@ def main():
     
     dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler('start',start))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("remind", remind))
+    dp.add_handler(CommandHandler("delete", delete))
 	
     updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     updater.idle()
 
-    """Local dev"""
+    # """Local dev"""
+    # db.setup()
+
     # # Create the Updater and pass it your bot's token.
     # # Make sure to set use_context=True to use the new context based callbacks
     # # Post version 12 this will no longer be necessary
@@ -55,6 +80,7 @@ def main():
     # dp.add_handler(CommandHandler("start", start))
     # dp.add_handler(CommandHandler("help", help))
     # dp.add_handler(CommandHandler("remind", remind))
+    # dp.add_handler(CommandHandler("delete", delete))
 
     # # on noncommand i.e message - echo the message on Telegram
     # # dp.add_handler(MessageHandler(Filters.text, echo))
