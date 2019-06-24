@@ -23,7 +23,7 @@ def main():
 
     dp.add_handler(CommandHandler('start',start))
 	
-    #updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
+    updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     updater.idle()
 
 if __name__ == '__main__':
