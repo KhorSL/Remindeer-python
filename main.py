@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 
-token = <INSERT TOKEN>
+token = '895938816:AAEe0YkgUOjoOmQjvYEiErYBFxA9qhcChMY'
 PORT = int(os.environ.get('PORT', '8443'))
 
 def start(bot,update):
@@ -23,7 +23,7 @@ def main():
 
     dp.add_handler(CommandHandler('start',start))
 	
-    updater.bot.set_webhook("https://kjb2.herokuapp.com/" + token)
+    #updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     updater.idle()
 
 if __name__ == '__main__':
