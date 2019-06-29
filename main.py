@@ -41,6 +41,12 @@ def delete(bot, update):
     message = "\n".join(reminders)
     update.message.reply_text(message)
 
+def list_all(bot, update):
+    chat_id = update.message.chat_id
+    reminders = db.get_reminders(chat_id)
+    message = "\n".join(reminders)
+    update.message.reply_text(message)
+
 def error(bot, update, error):
     """Log Errors caused by Updates."""
     print ('Update "%s" caused error "%s"', update, error)
@@ -60,6 +66,7 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("remind", remind))
     dp.add_handler(CommandHandler("delete", delete))
+    dp.add_handler(CommandHandler("list", list_all))
 	
     updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     updater.idle()
