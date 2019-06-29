@@ -1,31 +1,40 @@
-import sqlite3
-
+import psycopg2
 
 class Database:
-    def __init__(self, dbname="todo.sqlite"):
+    
+    """Deployment"""
+    DATABASE_URL = os.environ['postgresql-aerodynamic-86024']
+
+    def __init__(self, user="postgres", dbname="todo", port="5432", host="127.0.0.1", password=""):
         self.dbname = dbname
-        self.conn = sqlite3.connect(dbname)
+
+        """Development"""
+        # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
+        
+        """Deployment"""
+        self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+
+        self.cursor = self.conn.cursor()
 
     def setup(self):
-        stmt = "CREATE TABLE IF NOT EXISTS items (description text)"
-        self.conn.execute(stmt)
+        stmt = "CREATE TABLE IF NOT EXISTS reminders (id BIGSERIAL PRIMARY KEY, chat_id BIGSERIAL, reminder_text TEXT, reminder_time TIME)"
+        self.cursor.execute(stmt)
         self.conn.commit()
 
-    def add_item(self, item_text):
-        self.conn = sqlite3.connect("todo.sqlite")
-        stmt = "INSERT INTO items (description) VALUES (?)"
-        args = (item_text, )
-        self.conn.execute(stmt, args)
+    def add_reminder(self, input_text, chat_id):
+        stmt = "INSERT INTO reminders (reminder_text, chat_id) VALUES (%s, %s)"
+        args = (input_text, chat_id, )
+        self.cursor.execute(stmt, args)
         self.conn.commit()
 
-    def delete_item(self, item_text):
-        self.conn = sqlite3.connect("todo.sqlite")
-        stmt = "DELETE FROM items WHERE description = (?)"
-        args = (item_text, )
-        self.conn.execute(stmt, args)
+    def delete_reminder(self, reminder_text):
+        stmt = "DELETE FROM reminders WHERE reminder_text = (%s)"
+        args = (reminder_text, )
+        self.cursor.execute(stmt, args)
         self.conn.commit()
 
-    def get_items(self):
-        self.conn = sqlite3.connect("todo.sqlite")
-        stmt = "SELECT description FROM items"
-        return [x[0] for x in self.conn.execute(stmt)]
+    def get_reminders(self, chat_id):
+        stmt = "SELECT reminder_text FROM reminders WHERE chat_id = (%s)"
+        args = (chat_id, )
+        self.cursor.execute(stmt, args)
+        return [x[0] for x in self.cursor.fetchall()]

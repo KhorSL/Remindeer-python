@@ -13,32 +13,30 @@ PORT = int(os.environ.get('PORT', '8443'))
 def start(bot, update):
     chat_id = update.message.chat_id
     update.message.reply_text('Hi there! \U0001F60A')
-    update.message.reply_text('Start by selecting your bus stop by /set <busstopcode>')
-    update.message.reply_text('For Example: /set 65191')
-    update.message.reply_text('Or send your location to me! \U0001F609')
 
 def help(bot, update):
     update.message.reply_text('Help is for the weak. Try harder \U0001F60A')
 
 def remind(bot, update):
+    chat_id = update.message.chat_id
     input = update.message.text[8:]
-    reminders = db.get_items()
+    reminders = db.get_reminders(chat_id)
     if input in reminders:
         pass
     else:
-        db.add_item(input)
-        reminders = db.get_items()
+        db.add_reminder(input, chat_id)
+        reminders = db.get_reminders(chat_id)
     message = "\n".join(reminders)
     update.message.reply_text(message)
 
 def delete(bot, update):
     input = update.message.text[8:]
     try:
-        db.delete_item(input)
+        db.delete_reminder(input)
         update.message.reply_text('`' + input + '`' + ' deleted')
     except KeyError:
         pass
-    reminders = db.get_items()
+    reminders = db.get_reminders()
     message = "\n".join(reminders)
     update.message.reply_text(message)
 
@@ -48,7 +46,7 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 def main():
-    """Deployment"""
+    # """Deployment"""
     db.setup()
     updater = Updater(token)
     updater.start_webhook(listen="0.0.0.0",
@@ -65,15 +63,11 @@ def main():
     updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     updater.idle()
 
-    # """Local dev"""
+    """Development"""
     # db.setup()
 
-    # # Create the Updater and pass it your bot's token.
-    # # Make sure to set use_context=True to use the new context based callbacks
-    # # Post version 12 this will no longer be necessary
     # updater = Updater(token)
 
-    # # Get the dispatcher to register handlers
     # dp = updater.dispatcher
 
     # # on different commands - answer in Telegram
@@ -82,18 +76,12 @@ def main():
     # dp.add_handler(CommandHandler("remind", remind))
     # dp.add_handler(CommandHandler("delete", delete))
 
-    # # on noncommand i.e message - echo the message on Telegram
-    # # dp.add_handler(MessageHandler(Filters.text, echo))
-
     # # log all errors
     # dp.add_error_handler(error)
 
     # # Start the Bot
     # updater.start_polling()
 
-    # # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # # SIGTERM or SIGABRT. This should be used most of the time, since
-    # # start_polling() is non-blocking and will stop the bot gracefully.
     # updater.idle()
 
 if __name__ == '__main__':
