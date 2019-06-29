@@ -30,13 +30,14 @@ def remind(bot, update):
     update.message.reply_text(message)
 
 def delete(bot, update):
+    chat_id = update.message.chat_id
     input = update.message.text[8:]
     try:
         db.delete_reminder(input)
         update.message.reply_text('`' + input + '`' + ' deleted')
     except KeyError:
         pass
-    reminders = db.get_reminders()
+    reminders = db.get_reminders(chat_id)
     message = "\n".join(reminders)
     update.message.reply_text(message)
 
