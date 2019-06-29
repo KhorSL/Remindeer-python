@@ -4,7 +4,7 @@ import psycopg2
 class Database:
     
     """Deployment"""
-    DATABASE_URL = os.environ['DATABASE_URL']
+    # DATABASE_URL = os.environ['DATABASE_URL']
 
     def __init__(self, user="postgres", dbname="todo", port="5432", host="127.0.0.1", password=""):
         self.dbname = dbname
@@ -13,6 +13,7 @@ class Database:
         # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
         
         """Deployment"""
+        DATABASE_URL = os.environ['DATABASE_URL']
         self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
         self.cursor = self.conn.cursor()
