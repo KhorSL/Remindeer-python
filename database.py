@@ -4,7 +4,7 @@ import psycopg2
 class Database:
     
     """Deployment"""
-    DATABASE_URL = DATABASE_URL = os.environ['DATABASE_URL']
+    DATABASE_URL = os.environ['DATABASE_URL']
 
     def __init__(self, user="postgres", dbname="todo", port="5432", host="127.0.0.1", password=""):
         self.dbname = dbname
