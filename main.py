@@ -10,6 +10,15 @@ db = Database()
 token = '895938816:AAEe0YkgUOjoOmQjvYEiErYBFxA9qhcChMY'
 PORT = int(os.environ.get('PORT', '8443'))
 
+# Helper methods
+def reply_user(update, reminders):
+    if len(reminders) > 0:
+        message = "\n".join(reminders)
+        update.message.reply_text(message)
+    else:
+        message = "There are no reminders in your list."
+        update.message.reply_text(message)
+
 def start(bot, update):
     chat_id = update.message.chat_id
     update.message.reply_text('Hi there! \U0001F60A')
@@ -26,26 +35,23 @@ def remind(bot, update):
     else:
         db.add_reminder(input, chat_id)
         reminders = db.get_reminders(chat_id)
-    message = "\n".join(reminders)
-    update.message.reply_text(message)
+    reply_user(update, reminders)
 
 def delete(bot, update):
     chat_id = update.message.chat_id
     input = update.message.text[8:]
     try:
-        db.delete_reminder(input)
+        db.delete_reminder(input, chat_id)
         update.message.reply_text('`' + input + '`' + ' deleted')
     except KeyError:
         pass
     reminders = db.get_reminders(chat_id)
-    message = "\n".join(reminders)
-    update.message.reply_text(message)
+    reply_user(update, reminders)
 
 def list_all(bot, update):
     chat_id = update.message.chat_id
     reminders = db.get_reminders(chat_id)
-    message = "\n".join(reminders)
-    update.message.reply_text(message)
+    reply_user(update, reminders)
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
@@ -53,44 +59,45 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 def main():
-    # """Deployment"""
-    db.setup()
-    updater = Updater(token)
-    updater.start_webhook(listen="0.0.0.0",
-                      port=PORT,
-                      url_path=token)
+    """Deployment"""
+    # db.setup()
+    # updater = Updater(token)
+    # updater.start_webhook(listen="0.0.0.0",
+    #                   port=PORT,
+    #                   url_path=token)
     
+    # dp = updater.dispatcher
+
+    # dp.add_handler(CommandHandler("start", start))
+    # dp.add_handler(CommandHandler("help", help))
+    # dp.add_handler(CommandHandler("remind", remind))
+    # dp.add_handler(CommandHandler("delete", delete))
+    # dp.add_handler(CommandHandler("list", list_all))
+	
+    # updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
+    # updater.idle()
+
+    """Development"""
+    db.setup()
+
+    updater = Updater(token)
+
     dp = updater.dispatcher
 
+    # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("remind", remind))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
-	
-    updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
+
+    # log all errors
+    dp.add_error_handler(error)
+
+    # Start the Bot
+    updater.start_polling()
+
     updater.idle()
-
-    """Development"""
-    # db.setup()
-
-    # updater = Updater(token)
-
-    # dp = updater.dispatcher
-
-    # # on different commands - answer in Telegram
-    # dp.add_handler(CommandHandler("start", start))
-    # dp.add_handler(CommandHandler("help", help))
-    # dp.add_handler(CommandHandler("remind", remind))
-    # dp.add_handler(CommandHandler("delete", delete))
-
-    # # log all errors
-    # dp.add_error_handler(error)
-
-    # # Start the Bot
-    # updater.start_polling()
-
-    # updater.idle()
 
 if __name__ == '__main__':
     print ('Bot is running')
