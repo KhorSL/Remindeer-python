@@ -34,26 +34,26 @@ def reply_user(update, reminders):
 def inline_handler(bot, update):
     query = update.callback_query
 
-    if re.match(r"DAY;\d+;\d+;\d+", query.data):
-        selected, date = telegramcalendar.process_calendar_selection(bot, update)
+    selected, date = telegramcalendar.process_calendar_selection(bot, update)
 
-        if selected:
-            chat_id = query.message.chat_id
-            bot.send_message(text="You selected %s" % (date.strftime("%d/%m/%Y")), chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
-            
-            # Retrieve and remove user input from intermediate table
-            input_reminder = db.get_intermediate(chat_id)[0]
-            db.delete_intermediate(chat_id)
+    if selected:
+        chat_id = query.message.chat_id
+        bot.send_message(text="You selected %s" % (date.strftime("%d/%m/%Y")), chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
+        
+        # Retrieve and remove user input from intermediate table
+        input_reminder = db.get_intermediate(chat_id)[0]
+        db.delete_intermediate(chat_id)
 
-            db.add_reminder(input_reminder, chat_id, date)
-            reminders = db.get_reminders(chat_id)
-            
-            if len(reminders) > 0:
-                message = numbering_list(reminders)
-                bot.send_message(text=message, chat_id=chat_id)
-            else:
-                message = "There are no reminders in your list."
-                bot.send_message(text=message, chat_id=chat_id)
+        db.add_reminder(input_reminder, chat_id, date)
+        reminders = db.get_reminders(chat_id)
+        
+        if len(reminders) > 0:
+            message = numbering_list(reminders)
+            bot.send_message(text=message, chat_id=chat_id)
+        else:
+            message = "There are no reminders in your list."
+            bot.send_message(text=message, chat_id=chat_id)
+
 
 
 def start(bot, update):
