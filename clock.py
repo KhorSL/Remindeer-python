@@ -21,13 +21,10 @@ def add_reminder_job(date):
   scheduler.add_job(send_reminder, 'date', run_date=date+":00")
 
 if __name__ == "__main__":
-    scheduler = BackgroundScheduler()
+    sched = BackgroundScheduler()
 
-    @scheduler.scheduled_job('interval', minutes=10)
+    @sched.scheduled_job('interval', minutes=10)
     def timed_job():
         print('Scheduler is alive')
-
-    try:
-        scheduler.start()
-    except KeyboardInterrupt:
-        pass
+    
+    sched.start()
