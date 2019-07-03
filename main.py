@@ -99,7 +99,7 @@ def time(bot, update):
 
     # scheduler.add_job(tick, 'date', run_date=date+":00")
 
-    add_reminder_job(date)
+    # add_reminder_job(date)
 
     confirmation_message = "Reminder set on " + date
     bot.send_message(text=confirmation_message, chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
