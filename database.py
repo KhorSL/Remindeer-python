@@ -17,7 +17,7 @@ class Database:
 
     def setup(self):
         table_reminders = "CREATE TABLE IF NOT EXISTS reminders (id BIGSERIAL PRIMARY KEY, chat_id BIGSERIAL NOT NULL, reminder_text TEXT, reminder_time TIMESTAMP WITH TIME ZONE)"
-        table_intermediate = "CREATE TABLE IF NOT EXISTS intermediate (id BIGSERIAL PRIMARY KEY, chat_id BIGSERIAL NOT NULL, reminder_text TEXT, stored_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)"
+        table_intermediate = "CREATE TABLE IF NOT EXISTS intermediate (id BIGSERIAL PRIMARY KEY, chat_id BIGSERIAL NOT NULL, reminder_text TEXT, reminder_date DATE, stored_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)"
         self.cursor.execute(table_reminders)
         self.cursor.execute(table_intermediate)
         self.conn.commit()
@@ -40,17 +40,30 @@ class Database:
         self.cursor.execute(stmt, args)
         return [x[0] for x in self.cursor.fetchall()]
 
-    def add_intermediate(self, input_text, chat_id):
+    def get_reminders_to_send(self, input_time):
+        stmt = "SELECT * FROM reminders WHERE reminder_time = (%s)"
+        input_time = input_time.strftime("%Y-%m-%d, %H:%M") + ":00"
+        args = (input_time, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()
+
+    def add_intermediate_reminder(self, input_text, chat_id):
         stmt = "INSERT INTO intermediate (reminder_text, chat_id) VALUES (%s, %s)"
         args = (input_text, chat_id, )
         self.cursor.execute(stmt, args)
         self.conn.commit()
 
+    def update_intermediate_reminder_date(self, input_date, chat_id):
+        stmt = "UPDATE intermediate SET reminder_date = (%s) WHERE id = (SELECT id FROM intermediate WHERE chat_id = (%s) ORDER BY stored_time ASC LIMIT 1)"
+        args = (input_date, chat_id, )
+        self.cursor.execute(stmt, args)
+        self.conn.commit()
+
     def get_intermediate(self, chat_id):
-        stmt = "SELECT reminder_text FROM intermediate WHERE chat_id = (%s) ORDER BY stored_time ASC LIMIT 1"
+        stmt = "SELECT * FROM intermediate WHERE chat_id = (%s) ORDER BY stored_time ASC LIMIT 1"
         args = (chat_id, )
         self.cursor.execute(stmt, args)
-        return [x[0] for x in self.cursor.fetchall()]
+        return self.cursor.fetchall()[0]
 
     def delete_intermediate(self, chat_id):
         stmt = "DELETE FROM intermediate WHERE id = (SELECT id FROM intermediate WHERE chat_id = (%s) ORDER BY stored_time ASC LIMIT 1);"
