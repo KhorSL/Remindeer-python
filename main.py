@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 db = Database()
 
 # Scheduler setup
-scheduler = BackgroundScheduler()
+# scheduler = BackgroundScheduler()
 
 # Configs
 token = '895938816:AAEe0YkgUOjoOmQjvYEiErYBFxA9qhcChMY'
@@ -151,7 +151,7 @@ def tick():
 
 def main():
     """Deployment"""
-    scheduler.start()
+    # scheduler.start()
     db.setup()
     updater = Updater(token)
     updater.start_webhook(listen="0.0.0.0",
