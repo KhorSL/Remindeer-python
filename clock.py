@@ -1,4 +1,4 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.blocking import BlockingScheduler
 from telegram import Bot
 from database import Database
 from datetime import datetime
@@ -16,14 +16,18 @@ def send_reminder():
       bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
 def add_reminder_job(date):
-  scheduler = BackgroundScheduler()
+  scheduler = BlockingScheduler()
   scheduler.start()
   scheduler.add_job(send_reminder, 'date', run_date=date+":00")
 
+if __name__ == "__main__":
+    scheduler = BlockingScheduler()
 
-sched = BackgroundScheduler()
-@sched.scheduled_job('interval', minutes=10)
-def timed_job():
-    print('Scheduler is alive')
+    @scheduler.scheduled_job('interval', minutes=1)
+    def timed_job():
+        print('Scheduler is alive')
 
-sched.start()
+    try:
+        scheduler.start()
+    except KeyboardInterrupt:
+        pass
