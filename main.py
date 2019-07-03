@@ -9,7 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import telegramcalendar
 
 from database import Database
-from clock import add_reminder_job
+# from clock import add_reminder_job
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
