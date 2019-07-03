@@ -9,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import telegramcalendar
 
 from database import Database
+from clock import add_reminder_job
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -96,7 +97,9 @@ def time(bot, update):
     db.add_reminder(input_reminder, chat_id, date)
     reminders = db.get_reminders(chat_id)
 
-    scheduler.add_job(tick, 'date', run_date=date+":00")
+    # scheduler.add_job(tick, 'date', run_date=date+":00")
+
+    add_reminder_job(date)
 
     confirmation_message = "Reminder set on " + date
     bot.send_message(text=confirmation_message, chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
