@@ -31,7 +31,7 @@ if __name__ == "__main__":
     def scheduled_job():
       db = Database()
       bot = Bot(token)
-      reminders_to_send = db.get_reminders_to_send(datetime.now())
+      reminders_to_send = db.get_all_reminders()
 
       for reminder in reminders_to_send:
           chat_id = reminder[1]

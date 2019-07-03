@@ -47,6 +47,11 @@ class Database:
         self.cursor.execute(stmt, args)
         return self.cursor.fetchall()
 
+    def get_all_reminders(self, input_time):
+        stmt = "SELECT * FROM reminders"
+        self.cursor.execute(stmt)
+        return self.cursor.fetchall()
+
     def add_intermediate_reminder(self, input_text, chat_id):
         stmt = "INSERT INTO intermediate (reminder_text, chat_id) VALUES (%s, %s)"
         args = (input_text, chat_id, )
