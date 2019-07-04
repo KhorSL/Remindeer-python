@@ -7,11 +7,11 @@ class Database:
         self.dbname = dbname
 
         """Development"""
-        self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
+        # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
         
         """Deployment"""
-        # DATABASE_URL = os.environ['DATABASE_URL']
-        # self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        DATABASE_URL = os.environ['DATABASE_URL']
+        self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
         self.cursor = self.conn.cursor()
 

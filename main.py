@@ -158,47 +158,12 @@ def reminder_job():
 
 def main():
     """Deployment"""
-    # # scheduler.start()
-    # db.setup()
-    # updater = Updater(token)
-    # updater.start_webhook(listen="0.0.0.0",
-    #                   port=PORT,
-    #                   url_path=token)
-    
-    # dp = updater.dispatcher
-
-    # # Add conversation handler with the states DATE and TIME
-    # conv_handler = ConversationHandler(
-    #     entry_points=[CommandHandler('remind', remind)],
-
-    #     states={
-    #         DATE: [CallbackQueryHandler(date_handler)],
-
-    #         TIME: [RegexHandler('^(0[0-9]|1[0-9]|2[0-3]|[0-9]):[0-5][0-9]$', time)]
-    #     },
-
-    #     fallbacks=[CommandHandler('cancel', cancel)]
-    # )
-
-    # dp.add_handler(conv_handler)
-
-    # dp.add_handler(CommandHandler("start", start))
-    # dp.add_handler(CommandHandler("help", help))
-    # # dp.add_handler(CommandHandler("remind", remind))
-    # dp.add_handler(CommandHandler("delete", delete))
-    # dp.add_handler(CommandHandler("list", list_all))
-    # # dp.add_handler(CallbackQueryHandler(inline_handler))
-	
-    # # log all errors
-    # dp.add_error_handler(error)
-
-    # updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
-    # updater.idle()
-
-    """Development"""
+    # scheduler.start()
     db.setup()
-
     updater = Updater(token)
+    updater.start_webhook(listen="0.0.0.0",
+                      port=PORT,
+                      url_path=token)
     
     dp = updater.dispatcher
 
@@ -217,19 +182,54 @@ def main():
 
     dp.add_handler(conv_handler)
 
-    # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
+    # dp.add_handler(CommandHandler("remind", remind))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
-
+    # dp.add_handler(CallbackQueryHandler(inline_handler))
+	
     # log all errors
     dp.add_error_handler(error)
 
-    # Start the Bot
-    updater.start_polling()
-
+    updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     updater.idle()
+
+    """Development"""
+    # db.setup()
+
+    # updater = Updater(token)
+    
+    # dp = updater.dispatcher
+
+    # # Add conversation handler with the states DATE and TIME
+    # conv_handler = ConversationHandler(
+    #     entry_points=[CommandHandler('remind', remind)],
+
+    #     states={
+    #         DATE: [CallbackQueryHandler(date_handler)],
+
+    #         TIME: [RegexHandler('^(0[0-9]|1[0-9]|2[0-3]|[0-9]):[0-5][0-9]$', time)]
+    #     },
+
+    #     fallbacks=[CommandHandler('cancel', cancel)]
+    # )
+
+    # dp.add_handler(conv_handler)
+
+    # # on different commands - answer in Telegram
+    # dp.add_handler(CommandHandler("start", start))
+    # dp.add_handler(CommandHandler("help", help))
+    # dp.add_handler(CommandHandler("delete", delete))
+    # dp.add_handler(CommandHandler("list", list_all))
+
+    # # log all errors
+    # dp.add_error_handler(error)
+
+    # # Start the Bot
+    # updater.start_polling()
+
+    # updater.idle()
 
 if __name__ == '__main__':
     print ('Bot is running')
