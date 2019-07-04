@@ -6,6 +6,6 @@ def job():
 
 sched = BlockingScheduler()
 
-sched.start()
-
 sched.add_job(job, 'interval', minutes=5)
+
+sched.start()
