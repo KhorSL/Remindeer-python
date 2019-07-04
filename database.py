@@ -7,11 +7,11 @@ class Database:
         self.dbname = dbname
 
         """Development"""
-        # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
+        self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
         
         """Deployment"""
-        DATABASE_URL = os.environ['DATABASE_URL']
-        self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        # DATABASE_URL = os.environ['DATABASE_URL']
+        # self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
         self.cursor = self.conn.cursor()
 
@@ -44,6 +44,13 @@ class Database:
         stmt = "SELECT * FROM reminders WHERE reminder_time = (%s)"
         input_time = input_time.strftime("%Y-%m-%d, %H:%M") + ":00"
         args = (input_time, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()
+
+    def get_reminders_around_time(self, input_time):
+        stmt = "SELECT * FROM reminders WHERE reminder_time BETWEEN TO_TIMESTAMP((%s), \'YYYY/MM/DD HH24:MI:SS\') - INTERVAL \'5 minutes\' AND TO_TIMESTAMP((%s), 'YYYY/MM/DD HH24:MI:SS') + INTERVAL \'5 minutes\';"
+        input_time = input_time.strftime("%Y-%m-%d, %H:%M") + ":00"
+        args = (input_time, input_time, )
         self.cursor.execute(stmt, args)
         return self.cursor.fetchall()
 

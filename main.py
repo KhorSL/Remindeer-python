@@ -4,12 +4,10 @@ from datetime import datetime
 from configparser import ConfigParser
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler, RegexHandler
-from apscheduler.schedulers.background import BackgroundScheduler
 
 import telegramcalendar
 
 from database import Database
-# from clock import add_reminder_job
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -149,51 +147,23 @@ def tick():
         reminder_to_send = reminder[2]
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
+def reminder_job():
+    bot = Bot(token)
+    reminders_to_send = db.get_reminders_around_time(datetime.now())
+
+    for reminder in reminders_to_send:
+        chat_id = reminder[1]
+        reminder_to_send = reminder[2]
+        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
+
 def main():
     """Deployment"""
-    # scheduler.start()
-    db.setup()
-    updater = Updater(token)
-    updater.start_webhook(listen="0.0.0.0",
-                      port=PORT,
-                      url_path=token)
-    
-    dp = updater.dispatcher
-
-    # Add conversation handler with the states DATE and TIME
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('remind', remind)],
-
-        states={
-            DATE: [CallbackQueryHandler(date_handler)],
-
-            TIME: [RegexHandler('^(0[0-9]|1[0-9]|2[0-3]|[0-9]):[0-5][0-9]$', time)]
-        },
-
-        fallbacks=[CommandHandler('cancel', cancel)]
-    )
-
-    dp.add_handler(conv_handler)
-
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help))
-    # dp.add_handler(CommandHandler("remind", remind))
-    dp.add_handler(CommandHandler("delete", delete))
-    dp.add_handler(CommandHandler("list", list_all))
-    # dp.add_handler(CallbackQueryHandler(inline_handler))
-	
-    # log all errors
-    dp.add_error_handler(error)
-
-    updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
-    updater.idle()
-
-    """Development"""
-    # scheduler.start()
-
+    # # scheduler.start()
     # db.setup()
-
     # updater = Updater(token)
+    # updater.start_webhook(listen="0.0.0.0",
+    #                   port=PORT,
+    #                   url_path=token)
     
     # dp = updater.dispatcher
 
@@ -212,19 +182,54 @@ def main():
 
     # dp.add_handler(conv_handler)
 
-    # # on different commands - answer in Telegram
     # dp.add_handler(CommandHandler("start", start))
     # dp.add_handler(CommandHandler("help", help))
+    # # dp.add_handler(CommandHandler("remind", remind))
     # dp.add_handler(CommandHandler("delete", delete))
     # dp.add_handler(CommandHandler("list", list_all))
-
+    # # dp.add_handler(CallbackQueryHandler(inline_handler))
+	
     # # log all errors
     # dp.add_error_handler(error)
 
-    # # Start the Bot
-    # updater.start_polling()
-
+    # updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
     # updater.idle()
+
+    """Development"""
+    db.setup()
+
+    updater = Updater(token)
+    
+    dp = updater.dispatcher
+
+    # Add conversation handler with the states DATE and TIME
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('remind', remind)],
+
+        states={
+            DATE: [CallbackQueryHandler(date_handler)],
+
+            TIME: [RegexHandler('^(0[0-9]|1[0-9]|2[0-3]|[0-9]):[0-5][0-9]$', time)]
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+
+    dp.add_handler(conv_handler)
+
+    # on different commands - answer in Telegram
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("delete", delete))
+    dp.add_handler(CommandHandler("list", list_all))
+
+    # log all errors
+    dp.add_error_handler(error)
+
+    # Start the Bot
+    updater.start_polling()
+
+    updater.idle()
 
 if __name__ == '__main__':
     print ('Bot is running')
