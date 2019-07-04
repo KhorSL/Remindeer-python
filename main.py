@@ -1,6 +1,6 @@
 import os, requests, re, time, logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from configparser import ConfigParser
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler, RegexHandler
@@ -149,7 +149,7 @@ def tick():
 
 def reminder_job():
     bot = Bot(token)
-    reminders_to_send = db.get_reminders_around_time(datetime.now())
+    reminders_to_send = db.get_reminders_around_time(datetime.now() + timedelta(hours=8))
 
     for reminder in reminders_to_send:
         chat_id = reminder[1]
