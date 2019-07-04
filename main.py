@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from configparser import ConfigParser
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler, RegexHandler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 import telegramcalendar
 
@@ -18,11 +19,12 @@ logger = logging.getLogger(__name__)
 db = Database()
 
 # Scheduler setup
-# scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler()
 
 # Configs
 token = '895938816:AAEe0YkgUOjoOmQjvYEiErYBFxA9qhcChMY'
 PORT = int(os.environ.get('PORT', '8443'))
+app_url = "https://remindeer-bot.herokuapp.com/"
 
 # Conversation Handler states
 DATE, TIME = range(2)
@@ -156,9 +158,13 @@ def reminder_job():
         reminder_to_send = reminder[2]
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
+def ping():
+    requests.get(app_url)
+
 def main():
     """Deployment"""
-    # scheduler.start()
+    scheduler.add_job(ping, 'interval', minutes=5)
+    scheduler.start()
     db.setup()
     updater = Updater(token)
     updater.start_webhook(listen="0.0.0.0",
@@ -192,7 +198,7 @@ def main():
     # log all errors
     dp.add_error_handler(error)
 
-    updater.bot.set_webhook("https://remindeer-bot.herokuapp.com/" + token)
+    updater.bot.set_webhook(app_url + token)
     updater.idle()
 
     """Development"""
