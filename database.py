@@ -34,11 +34,23 @@ class Database:
         self.cursor.execute(stmt, args)
         self.conn.commit()
 
-    def get_reminders(self, chat_id):
+    def delete_reminder_by_id(self, input_id, chat_id):
+        stmt = "DELETE FROM reminders WHERE id = (%s) AND chat_id = (%s)"
+        args = (input_id, chat_id, )
+        self.cursor.execute(stmt, args)
+        self.conn.commit()    
+
+    def get_reminders_text(self, chat_id):
         stmt = "SELECT reminder_text FROM reminders WHERE chat_id = (%s)"
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         return [x[0] for x in self.cursor.fetchall()]
+
+    def get_reminders(self, chat_id):
+        stmt = "SELECT * FROM reminders WHERE chat_id = (%s)"
+        args = (chat_id, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()
 
     def get_reminders_to_send(self, input_time):
         stmt = "SELECT * FROM reminders WHERE reminder_time = (%s)"

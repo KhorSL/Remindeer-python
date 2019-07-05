@@ -61,6 +61,9 @@ def date_handler(bot, update):
 def start(bot, update):
     chat_id = update.message.chat_id
     update.message.reply_text('Hi there! \U0001F60A')
+    update.message.reply_text('To add a reminder: \n\n /remind [reminder]')
+    update.message.reply_text('To see all reminders: \n\n /list')
+    update.message.reply_text('To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]')
 
 def help(bot, update):
     update.message.reply_text('Help is for the weak. Try harder \U0001F60A')
@@ -75,7 +78,7 @@ def remind(bot, update):
     # Save intermediate result
     db.add_intermediate_reminder(input_reminder, chat_id)
 
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
     if input in reminders:
         pass
     else:
@@ -95,7 +98,7 @@ def time(bot, update):
     db.delete_intermediate(chat_id)
 
     db.add_reminder(input_reminder, chat_id, date)
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
 
     # scheduler.add_job(tick, 'date', run_date=date+":00")
 
@@ -121,18 +124,23 @@ def cancel(bot, update):
 
 def delete(bot, update):
     chat_id = update.message.chat_id
+    reminders = db.get_reminders(chat_id)
     input = update.message.text[8:]
+    
+    reminder_id = reminders[input - 1][0]
+
     try:
-        db.delete_reminder(input, chat_id)
-        update.message.reply_text('`' + input + '`' + ' deleted')
+        db.delete_reminder_by_id(input, chat_id)
+        # update.message.reply_text('`' + input + '`' + ' deleted')
+        update.message.reply_text('`' + reminders[input - 1][2] + '`' + ' deleted')
     except KeyError:
         pass
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
     reply_user(update, reminders)
 
 def list_all(bot, update):
     chat_id = update.message.chat_id
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
     reply_user(update, reminders)
 
 def error(bot, update, error):
