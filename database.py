@@ -48,7 +48,7 @@ class Database:
         return self.cursor.fetchall()
 
     def get_reminders_around_time(self, input_time):
-        stmt = "SELECT * FROM reminders WHERE reminder_time BETWEEN TO_TIMESTAMP((%s), \'YYYY/MM/DD HH24:MI:SS\') - INTERVAL \'5 minutes\' AND TO_TIMESTAMP((%s), 'YYYY/MM/DD HH24:MI:SS') + INTERVAL \'5 minutes\';"
+        stmt = "SELECT * FROM reminders WHERE reminder_time BETWEEN TO_TIMESTAMP((%s), \'YYYY/MM/DD HH24:MI:SS\') - INTERVAL \'1 minutes\' AND TO_TIMESTAMP((%s), 'YYYY/MM/DD HH24:MI:SS') + INTERVAL \'1 minutes\';"
         input_time = input_time.strftime("%Y-%m-%d, %H:%M") + ":00"
         print (input_time)
         args = (input_time, input_time, )

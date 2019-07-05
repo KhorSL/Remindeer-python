@@ -31,7 +31,7 @@ DATE, TIME = range(2)
 
 # Helper methods
 def numbering_list(input_list):
-    result = "\U0001F4DD Your current reminders:\n"
+    result = "\U0001F4DD Your current reminders:\n\n"
     for i in range(len(input_list)):
         result = result + str(i+1) + ". " + input_list[i] + "\n"
     return result
@@ -53,7 +53,7 @@ def date_handler(bot, update):
         chat_id = query.message.chat_id
         db.update_intermediate_reminder_date(date, chat_id)
         bot.send_message(text="You selected %s as the day of reminder. \n \n"
-            "What about the time of reminder? Please give me in 24 hours format (e.g. 23:59)" % (date.strftime("%d/%m/%Y")), 
+            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d/%m/%Y")), 
             chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
         
         return TIME
@@ -115,7 +115,7 @@ def time(bot, update):
 
 def cancel(bot, update):
     user = update.message.from_user
-    update.message.reply_text('Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text('Bye! I hope to receieve a reminder some day.', reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
@@ -190,10 +190,8 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    # dp.add_handler(CommandHandler("remind", remind))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
-    # dp.add_handler(CallbackQueryHandler(inline_handler))
 	
     # log all errors
     dp.add_error_handler(error)
