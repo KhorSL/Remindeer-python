@@ -129,13 +129,14 @@ def delete(bot, update):
     chat_id = update.message.chat_id
     reminders = db.get_reminders(chat_id)
     input = update.message.text[8:]
+    index = int(input, 10)
     
-    reminder_id = reminders[int(input, 10) - 1][0]
+    reminder_id = reminders[index - 1][0]
 
     try:
         db.delete_reminder_by_id(input, chat_id)
         # update.message.reply_text('`' + input + '`' + ' deleted')
-        update.message.reply_text('`' + reminders[input - 1][2] + '`' + ' deleted')
+        update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
     except KeyError:
         pass
     reminders = db.get_reminders_text(chat_id)
