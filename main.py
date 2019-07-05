@@ -31,7 +31,7 @@ DATE, TIME = range(2)
 
 # Helper methods
 def numbering_list(input_list):
-    result = "\U0001F4DD Your current reminders:\n"
+    result = "\U0001F4DD Your current reminders:\n\n"
     for i in range(len(input_list)):
         result = result + str(i+1) + ". " + input_list[i] + "\n"
     return result
@@ -53,7 +53,7 @@ def date_handler(bot, update):
         chat_id = query.message.chat_id
         db.update_intermediate_reminder_date(date, chat_id)
         bot.send_message(text="You selected %s as the day of reminder. \n \n"
-            "What about the time of reminder? Please give me in 24 hours format (e.g. 23:59)" % (date.strftime("%d/%m/%Y")), 
+            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d/%m/%Y")), 
             chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
         
         return TIME
@@ -61,9 +61,15 @@ def date_handler(bot, update):
 def start(bot, update):
     chat_id = update.message.chat_id
     update.message.reply_text('Hi there! \U0001F60A')
+    update.message.reply_text('To add a reminder: \n\n /remind [reminder]')
+    update.message.reply_text('To see all reminders: \n\n /list')
+    update.message.reply_text('To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]')
 
 def help(bot, update):
     update.message.reply_text('Help is for the weak. Try harder \U0001F60A')
+    update.message.reply_text('To add a reminder: \n\n /remind [reminder]')
+    update.message.reply_text('To see all reminders: \n\n /list')
+    update.message.reply_text('To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]')
 
 def remind(bot, update):
     chat_id = update.message.chat_id
@@ -75,7 +81,7 @@ def remind(bot, update):
     # Save intermediate result
     db.add_intermediate_reminder(input_reminder, chat_id)
 
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
     if input in reminders:
         pass
     else:
@@ -95,7 +101,7 @@ def time(bot, update):
     db.delete_intermediate(chat_id)
 
     db.add_reminder(input_reminder, chat_id, date)
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
 
     # scheduler.add_job(tick, 'date', run_date=date+":00")
 
@@ -115,24 +121,30 @@ def time(bot, update):
 
 def cancel(bot, update):
     user = update.message.from_user
-    update.message.reply_text('Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text('Bye! I hope to receieve a reminder some day.', reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
 def delete(bot, update):
     chat_id = update.message.chat_id
+    reminders = db.get_reminders(chat_id)
     input = update.message.text[8:]
+    index = int(input, 10)
+    
+    reminder_id = reminders[index - 1][0]
+
     try:
-        db.delete_reminder(input, chat_id)
-        update.message.reply_text('`' + input + '`' + ' deleted')
+        db.delete_reminder_by_id(reminder_id, chat_id)
+        # update.message.reply_text('`' + input + '`' + ' deleted')
+        update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
     except KeyError:
         pass
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
     reply_user(update, reminders)
 
 def list_all(bot, update):
     chat_id = update.message.chat_id
-    reminders = db.get_reminders(chat_id)
+    reminders = db.get_reminders_text(chat_id)
     reply_user(update, reminders)
 
 def error(bot, update, error):
