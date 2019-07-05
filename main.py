@@ -67,6 +67,9 @@ def start(bot, update):
 
 def help(bot, update):
     update.message.reply_text('Help is for the weak. Try harder \U0001F60A')
+    update.message.reply_text('To add a reminder: \n\n /remind [reminder]')
+    update.message.reply_text('To see all reminders: \n\n /list')
+    update.message.reply_text('To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]')
 
 def remind(bot, update):
     chat_id = update.message.chat_id
@@ -127,7 +130,7 @@ def delete(bot, update):
     reminders = db.get_reminders(chat_id)
     input = update.message.text[8:]
     
-    reminder_id = reminders[input - 1][0]
+    reminder_id = reminders[int(input, 10) - 1][0]
 
     try:
         db.delete_reminder_by_id(input, chat_id)
