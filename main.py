@@ -22,9 +22,9 @@ db = Database()
 scheduler = BackgroundScheduler()
 
 # Configs
-token = '895938816:AAEe0YkgUOjoOmQjvYEiErYBFxA9qhcChMY'
+TOKEN = os.environ['BOT_TOKEN']
 PORT = int(os.environ.get('PORT', '8443'))
-app_url = "https://remindeer-bot.herokuapp.com/"
+APP_URL = os.environ['APP_URL']
 
 # Conversation Handler states
 DATE, TIME = range(2)
@@ -141,7 +141,7 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 def tick():
-    bot = Bot(token)
+    bot = Bot(TOKEN)
     reminders_to_send = db.get_reminders_to_send(datetime.now())
 
     for reminder in reminders_to_send:
@@ -150,7 +150,7 @@ def tick():
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
 def reminder_job():
-    bot = Bot(token)
+    bot = Bot(TOKEN)
     reminders_to_send = db.get_reminders_around_time(datetime.now() + timedelta(hours=8))
 
     for reminder in reminders_to_send:
@@ -159,17 +159,17 @@ def reminder_job():
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
 def ping():
-    requests.get(app_url)
+    requests.get(APP_URL)
 
 def main():
     """Deployment"""
     scheduler.add_job(ping, 'interval', minutes=5)
     scheduler.start()
     db.setup()
-    updater = Updater(token)
+    updater = Updater(TOKEN)
     updater.start_webhook(listen="0.0.0.0",
                       port=PORT,
-                      url_path=token)
+                      url_path=TOKEN)
     
     dp = updater.dispatcher
 
@@ -190,21 +190,19 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    # dp.add_handler(CommandHandler("remind", remind))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
-    # dp.add_handler(CallbackQueryHandler(inline_handler))
 	
     # log all errors
     dp.add_error_handler(error)
 
-    updater.bot.set_webhook(app_url + token)
+    updater.bot.set_webhook(APP_URL + TOKEN)
     updater.idle()
 
     """Development"""
     # db.setup()
 
-    # updater = Updater(token)
+    # updater = Updater(TOKEN)
     
     # dp = updater.dispatcher
 
