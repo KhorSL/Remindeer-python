@@ -3,7 +3,7 @@ import os, requests, re, time, logging
 from datetime import datetime, timedelta
 from configparser import ConfigParser
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler, RegexHandler
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQueryHandler, ConversationHandler, RegexHandler
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import telegramcalendar
@@ -28,6 +28,11 @@ APP_URL = os.environ['APP_URL']
 
 # Conversation Handler states
 DATE, TIME = range(2)
+
+# Messages
+HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
+                + 'To see all reminders: \n\n /list \n\n' \
+                + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
 # Helper methods
 def numbering_list(input_list):
@@ -60,16 +65,10 @@ def date_handler(bot, update):
 
 def start(bot, update):
     chat_id = update.message.chat_id
-    update.message.reply_text('Hi there! \U0001F60A')
-    update.message.reply_text('To add a reminder: \n\n /remind [reminder]')
-    update.message.reply_text('To see all reminders: \n\n /list')
-    update.message.reply_text('To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]')
+    update.message.reply_text('Hi there! \U0001F60A \n\n' + HELP_MESSAGE)
 
 def help(bot, update):
-    update.message.reply_text('Help is for the weak. Try harder \U0001F60A')
-    update.message.reply_text('To add a reminder: \n\n /remind [reminder]')
-    update.message.reply_text('To see all reminders: \n\n /list')
-    update.message.reply_text('To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]')
+    update.message.reply_text('Sending help now \U0001F60A \n\n' + HELP_MESSAGE)
 
 def remind(bot, update):
     chat_id = update.message.chat_id
@@ -104,7 +103,6 @@ def time(bot, update):
     reminders = db.get_reminders_text(chat_id)
 
     # scheduler.add_job(tick, 'date', run_date=date+":00")
-
     # add_reminder_job(date)
 
     confirmation_message = "Reminder set on " + date
@@ -135,7 +133,6 @@ def delete(bot, update):
 
     try:
         db.delete_reminder_by_id(reminder_id, chat_id)
-        # update.message.reply_text('`' + input + '`' + ' deleted')
         update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
     except KeyError:
         pass
@@ -179,9 +176,7 @@ def main():
     scheduler.start()
     db.setup()
     updater = Updater(TOKEN)
-    updater.start_webhook(listen="0.0.0.0",
-                      port=PORT,
-                      url_path=TOKEN)
+    updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
     
     dp = updater.dispatcher
 
