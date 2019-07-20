@@ -149,7 +149,7 @@ def list_all(bot, update):
     reminders = db.get_reminders_text_and_time(chat_id)
     reminders_to_list = []
     for reminder in reminders:
-        reminders_to_list.append(reminders[0] + "\n\n" + reminders[1] + "\n\n")
+        reminders_to_list.append(reminder[0] + "\n\n" + reminder[1] + "\n\n")
     reply_user(update, reminders_to_list)
 
 
