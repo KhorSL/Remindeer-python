@@ -2,7 +2,7 @@ import os, requests, re, time, logging
 
 from datetime import datetime, timedelta
 from configparser import ConfigParser
-from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, ParseMode
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQueryHandler, ConversationHandler, RegexHandler
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -22,11 +22,6 @@ db = Database()
 # Scheduler setup
 scheduler = BackgroundScheduler()
 
-# Configs
-# TOKEN = os.environ['BOT_TOKEN']
-# PORT = int(os.environ.get('PORT', '8443'))
-# APP_URL = os.environ['APP_URL']
-
 # Conversation Handler states
 DATE, TIME = range(2)
 
@@ -45,7 +40,7 @@ def numbering_list(input_list):
 def reply_user(update, reminders):
     if len(reminders) > 0:
         message = numbering_list(reminders)
-        update.message.reply_text(message)
+        update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
     else:
         message = "There are no reminders in your list."
         update.message.reply_text(message)
@@ -58,9 +53,9 @@ def date_handler(bot, update):
     if selected:
         chat_id = query.message.chat_id
         db.update_intermediate_reminder_date(date, chat_id)
-        bot.send_message(text="You selected %s as the day of reminder. \n \n"
-            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d/%m/%Y")), 
-            chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
+        bot.send_message(text="You selected *%s* as the day of reminder. \n \n"
+            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d %b %Y")), 
+            chat_id=chat_id, reply_markup=ReplyKeyboardRemove(), parse_mode=telegram.ParseMode.MARKDOWN)
         
         return TIME
 
@@ -141,15 +136,11 @@ def delete(bot, update):
     reply_user(update, reminders)
 
 def list_all(bot, update):
-    # chat_id = update.message.chat_id
-    # reminders = db.get_reminders_text(chat_id)
-    # reply_user(update, reminders)
-
     chat_id = update.message.chat_id
     reminders = db.get_reminders_text_and_time(chat_id)
     reminders_to_list = []
     for reminder in reminders:
-        reminders_to_list.append(reminder[0] + "\n\n" + reminder[1].strftime("%d %b %Y, %I:%M %p") + "\n\n")
+        reminders_to_list.append("*" + reminder[0] + "*\n\n" + reminder[1].strftime("%d %b %Y, %I:%M %p") + "\n\n")
     reply_user(update, reminders_to_list)
 
 def error(bot, update, error):
