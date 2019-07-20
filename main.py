@@ -54,7 +54,7 @@ def date_handler(bot, update):
         chat_id = query.message.chat_id
         db.update_intermediate_reminder_date(date, chat_id)
         bot.send_message(text="You selected *%s* as the day of reminder. \n \n"
-            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d %b %Y")), 
+            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d %b %Y, %a")), 
             chat_id=chat_id, reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN)
         
         return TIME
@@ -140,7 +140,7 @@ def list_all(bot, update):
     reminders = db.get_reminders_text_and_time(chat_id)
     reminders_to_list = []
     for reminder in reminders:
-        reminders_to_list.append("*" + reminder[0] + "*\n\n" + reminder[1].strftime("%d %b %Y, %I:%M %p") + "\n\n")
+        reminders_to_list.append("*" + reminder[0] + "*\n\n" + reminder[1].strftime("%d %b %Y, %a, %I:%M %p") + "\n\n")
     reply_user(update, reminders_to_list)
 
 def error(bot, update, error):
