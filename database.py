@@ -1,5 +1,6 @@
 import os
 import psycopg2
+import config
 
 class Database:
 
@@ -10,8 +11,8 @@ class Database:
         # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
         
         """Deployment"""
-        DATABASE_URL = os.environ['DATABASE_URL']
-        self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        # DATABASE_URL = os.environ['DATABASE_URL']
+        self.conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
 
         self.cursor = self.conn.cursor()
 
@@ -45,6 +46,12 @@ class Database:
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         return [x[0] for x in self.cursor.fetchall()]
+
+    def get_reminders_text_and_time(self, chat_id):
+        stmt = "SELECT reminder_text, reminder_time FROM reminders WHERE chat_id = (%s)"
+        args = (chat_id, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()
 
     def get_reminders(self, chat_id):
         stmt = "SELECT * FROM reminders WHERE chat_id = (%s)"

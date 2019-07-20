@@ -7,6 +7,7 @@ from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQu
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import telegramcalendar
+import config
 
 from database import Database
 
@@ -22,9 +23,9 @@ db = Database()
 scheduler = BackgroundScheduler()
 
 # Configs
-TOKEN = os.environ['BOT_TOKEN']
-PORT = int(os.environ.get('PORT', '8443'))
-APP_URL = os.environ['APP_URL']
+# TOKEN = os.environ['BOT_TOKEN']
+# PORT = int(os.environ.get('PORT', '8443'))
+# APP_URL = os.environ['APP_URL']
 
 # Conversation Handler states
 DATE, TIME = range(2)
@@ -140,9 +141,18 @@ def delete(bot, update):
     reply_user(update, reminders)
 
 def list_all(bot, update):
+    # chat_id = update.message.chat_id
+    # reminders = db.get_reminders_text(chat_id)
+    # reply_user(update, reminders)
+
     chat_id = update.message.chat_id
-    reminders = db.get_reminders_text(chat_id)
-    reply_user(update, reminders)
+    reminders = db.get_reminders_text_and_time(chat_id)
+    reminders_to_list = []
+    for reminder in reminders:
+        reminders_to_list.append(reminders[0] + "\n\n" + reminders[1] + "\n\n")
+    reply_user(update, reminders_to_list)
+
+
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
@@ -150,7 +160,7 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 def tick():
-    bot = Bot(TOKEN)
+    bot = Bot(config.TOKEN)
     reminders_to_send = db.get_reminders_to_send(datetime.now())
 
     for reminder in reminders_to_send:
@@ -159,7 +169,7 @@ def tick():
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
 def reminder_job():
-    bot = Bot(TOKEN)
+    bot = Bot(config.TOKEN)
     reminders_to_send = db.get_reminders_around_time(datetime.now() + timedelta(hours=8))
 
     for reminder in reminders_to_send:
@@ -168,15 +178,15 @@ def reminder_job():
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
 def ping():
-    requests.get(APP_URL)
+    requests.get(config.APP_URL)
 
 def main():
     """Deployment"""
     scheduler.add_job(ping, 'interval', minutes=5)
     scheduler.start()
     db.setup()
-    updater = Updater(TOKEN)
-    updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
+    updater = Updater(config.TOKEN)
+    updater.start_webhook(listen="0.0.0.0", port=config.PORT, url_path=config.TOKEN)
     
     dp = updater.dispatcher
 
@@ -203,7 +213,7 @@ def main():
     # log all errors
     dp.add_error_handler(error)
 
-    updater.bot.set_webhook(APP_URL + TOKEN)
+    updater.bot.set_webhook(config.APP_URL + config.TOKEN)
     updater.idle()
 
     """Development"""
