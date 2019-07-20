@@ -40,7 +40,7 @@ def numbering_list(input_list):
 def reply_user(update, reminders):
     if len(reminders) > 0:
         message = numbering_list(reminders)
-        update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
+        update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
     else:
         message = "There are no reminders in your list."
         update.message.reply_text(message)
@@ -55,7 +55,7 @@ def date_handler(bot, update):
         db.update_intermediate_reminder_date(date, chat_id)
         bot.send_message(text="You selected *%s* as the day of reminder. \n \n"
             "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d %b %Y")), 
-            chat_id=chat_id, reply_markup=ReplyKeyboardRemove(), parse_mode=telegram.ParseMode.MARKDOWN)
+            chat_id=chat_id, reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN)
         
         return TIME
 
