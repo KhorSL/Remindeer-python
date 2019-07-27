@@ -1,17 +1,15 @@
-import os
 import psycopg2
 import config
 
 class Database:
 
-    def __init__(self, user="postgres", dbname="todo", port="5432", host="127.0.0.1", password=""):
+    def __init__(self, user="postgres", dbname="remindeer", port="5432", host="127.0.0.1", password=""):
         self.dbname = dbname
 
         """Development"""
         # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
         
         """Deployment"""
-        # DATABASE_URL = os.environ['DATABASE_URL']
         self.conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
 
         self.cursor = self.conn.cursor()

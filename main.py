@@ -30,7 +30,8 @@ HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
                 + 'To see all reminders: \n\n /list \n\n' \
                 + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
-# Helper methods
+'''Helper methods'''
+
 def numbering_list(input_list):
     result = "\U0001F4DD Your current reminders:\n\n"
     for i in range(len(input_list)):
@@ -44,6 +45,10 @@ def reply_user(update, reminders):
     else:
         message = "There are no reminders in your list."
         update.message.reply_text(message)
+
+'''End of Helper Methods'''
+
+''' Handlers '''
 
 def date_handler(bot, update):
     query = update.callback_query
@@ -98,9 +103,6 @@ def time(bot, update):
     db.add_reminder(input_reminder, chat_id, date)
     reminders = db.get_reminders_text(chat_id)
 
-    # scheduler.add_job(tick, 'date', run_date=date+":00")
-    # add_reminder_job(date)
-
     confirmation_message = "Reminder set on " + date
     bot.send_message(text=confirmation_message, chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
 
@@ -115,7 +117,7 @@ def time(bot, update):
 
 def cancel(bot, update):
     user = update.message.from_user
-    update.message.reply_text('Bye! I hope to receieve a reminder some day.', reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text('Bye! I hope to receive a reminder some day.', reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
@@ -123,15 +125,19 @@ def delete(bot, update):
     chat_id = update.message.chat_id
     reminders = db.get_reminders(chat_id)
     input = update.message.text[8:]
-    index = int(input, 10)
-    
-    reminder_id = reminders[index - 1][0]
 
     try:
+        index = int(input, 10)
+        reminder_id = reminders[index - 1][0]
         db.delete_reminder_by_id(reminder_id, chat_id)
         update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
-    except KeyError:
-        pass
+    except IndexError:
+        update.message.reply_text('Index not found.')
+    except  ValueError:
+        update.message.reply_text('Please input an integer.')
+    except Exception:
+        update.message.reply_text('An error occurred, reminder was not deleted.')
+
     reminders = db.get_reminders_text(chat_id)
     reply_user(update, reminders)
 
@@ -148,14 +154,9 @@ def error(bot, update, error):
     print ('Update "%s" caused error "%s"', update, error)
     logger.warning('Update "%s" caused error "%s"', update, error)
 
-def tick():
-    bot = Bot(config.TOKEN)
-    reminders_to_send = db.get_reminders_to_send(datetime.now())
+''' End of Handlers'''
 
-    for reminder in reminders_to_send:
-        chat_id = reminder[1]
-        reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
+''' Jobs '''
 
 def reminder_job():
     bot = Bot(config.TOKEN)
@@ -169,9 +170,12 @@ def reminder_job():
 def ping():
     requests.get(config.APP_URL)
 
+''' End of Jobs '''
+
 def main():
     """Deployment"""
     scheduler.add_job(ping, 'interval', minutes=5)
+    scheduler.add_job(reminder_job, 'interval', minutes=1)
     scheduler.start()
     db.setup()
     updater = Updater(config.TOKEN)
@@ -198,7 +202,7 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
-	
+
     # log all errors
     dp.add_error_handler(error)
 
@@ -206,9 +210,12 @@ def main():
     updater.idle()
 
     """Development"""
+    # scheduler.add_job(ping, 'interval', minutes=5)
+    # scheduler.add_job(reminder_job, 'interval', minutes=1)
+    # scheduler.start()
     # db.setup()
 
-    # updater = Updater(TOKEN)
+    # updater = Updater(config.TOKEN)
     
     # dp = updater.dispatcher
 
