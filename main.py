@@ -73,7 +73,7 @@ def help(bot, update):
 
 def remind(bot, update):
     chat_id = update.message.chat_id
-    input_reminder = re.match("\/[\w]+([@_\w]+) (.+)", update.message.text).group(2)
+    input_reminder = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
 
     # Delete any leftover intermediate result for current chat
     db.delete_intermediate(chat_id)
@@ -124,7 +124,7 @@ def cancel(bot, update):
 def delete(bot, update):
     chat_id = update.message.chat_id
     reminders = db.get_reminders(chat_id)
-    user_input = re.match("\/[\w]+([@_\w]+) (.+)", update.message.text).group(2)
+    user_input = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
 
     try:
         index = int(user_input, 10)
