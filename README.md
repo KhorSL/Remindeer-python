@@ -9,15 +9,8 @@ Find the telegram bot at [@S_Remindeer_bot](https://t.me/S_Remindeer_bot "Remind
 
 ### Installing `psycopg2` in `virtualenv`
 
-Get path of `LDFLAGS`:
-
-```console
-$ pg_config --ldflag
--L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib -Wl,-dead_strip_dylibs
-```
-
-Then install `psycopg2`:
+Install `psycopg2` with the below command:
 
 ``` console
-$ env LDFLAGS='-L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib -Wl,-dead_strip_dylibs' pip install psycopg2==2.8.3
+$ env LDFLAGS=`$(pg_config --ldflags)` pip install psycopg2==2.8.3
 ```
