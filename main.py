@@ -73,7 +73,7 @@ def help(bot, update):
 
 def remind(bot, update):
     chat_id = update.message.chat_id
-    input_reminder = update.message.text[8:]
+    input_reminder = re.match("\/[\w]+([@_\w]+) (.+)", update.message.text).group(2)
 
     # Delete any leftover intermediate result for current chat
     db.delete_intermediate(chat_id)
@@ -124,16 +124,16 @@ def cancel(bot, update):
 def delete(bot, update):
     chat_id = update.message.chat_id
     reminders = db.get_reminders(chat_id)
-    input = update.message.text[8:]
+    user_input = re.match("\/[\w]+([@_\w]+) (.+)", update.message.text).group(2)
 
     try:
-        index = int(input, 10)
+        index = int(user_input, 10)
         reminder_id = reminders[index - 1][0]
         db.delete_reminder_by_id(reminder_id, chat_id)
         update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
     except IndexError:
         update.message.reply_text('Index not found.')
-    except  ValueError:
+    except ValueError:
         update.message.reply_text('Please input an integer.')
     except Exception:
         update.message.reply_text('An error occurred, reminder was not deleted.')
