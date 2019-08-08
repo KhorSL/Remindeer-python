@@ -64,30 +64,39 @@ def date_handler(bot, update):
         
         return TIME
 
+
 def start(bot, update):
     chat_id = update.message.chat_id
     update.message.reply_text('Hi there! \U0001F60A \n\n' + HELP_MESSAGE)
 
+
 def help(bot, update):
     update.message.reply_text('Sending help now \U0001F60A \n\n' + HELP_MESSAGE)
 
+
 def remind(bot, update):
-    chat_id = update.message.chat_id
-    input_reminder = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
+    try:
+        chat_id = update.message.chat_id
+        input_reminder = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
 
-    # Delete any leftover intermediate result for current chat
-    db.delete_intermediate(chat_id)
+        # Delete any leftover intermediate result for current chat
+        db.delete_intermediate(chat_id)
 
-    # Save intermediate result
-    db.add_intermediate_reminder(input_reminder, chat_id)
+        # Save intermediate result
+        db.add_intermediate_reminder(input_reminder, chat_id)
 
-    reminders = db.get_reminders_text(chat_id)
-    if input in reminders:
-        pass
-    else:
-        update.message.reply_text("\U0001F4C5 Please select a date \U0001F4C5", reply_markup=telegramcalendar.create_calendar())
+        reminders = db.get_reminders_text(chat_id)
+        if input in reminders:
+            pass
+        else:
+            update.message.reply_text("\U0001F4C5 Please select a date \U0001F4C5", reply_markup=telegramcalendar.create_calendar())
 
-    return DATE
+        return DATE
+    except AttributeError:
+        update.message.reply_text("Please tell me something to remind you about.")
+    except Exception:
+        update.message.reply_text("Sorry an error had occurred, reminder was not added.")
+
 
 def time(bot, update):
     user = update.message.from_user
@@ -115,18 +124,19 @@ def time(bot, update):
 
     return ConversationHandler.END    
 
+
 def cancel(bot, update):
     user = update.message.from_user
     update.message.reply_text('Bye! I hope to receive a reminder some day.', reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
-def delete(bot, update):
-    chat_id = update.message.chat_id
-    reminders = db.get_reminders(chat_id)
-    user_input = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
 
+def delete(bot, update):
     try:
+        chat_id = update.message.chat_id
+        reminders = db.get_reminders(chat_id)
+        user_input = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
         index = int(user_input, 10)
         reminder_id = reminders[index - 1][0]
         db.delete_reminder_by_id(reminder_id, chat_id)
@@ -135,11 +145,14 @@ def delete(bot, update):
         update.message.reply_text('Index not found.')
     except ValueError:
         update.message.reply_text('Please input an integer.')
+    except AttributeError:
+        update.message.reply_text('Please input an integer.')
     except Exception:
         update.message.reply_text('An error occurred, reminder was not deleted.')
 
     reminders = db.get_reminders_text(chat_id)
     reply_user(update, reminders)
+
 
 def list_all(bot, update):
     chat_id = update.message.chat_id
@@ -148,6 +161,7 @@ def list_all(bot, update):
     for reminder in reminders:
         reminders_to_list.append("*" + reminder[0] + "*\n\n" + reminder[1].strftime("%d %b %Y, %a, %I:%M %p") + "\n\n")
     reply_user(update, reminders_to_list)
+
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
@@ -167,18 +181,20 @@ def reminder_job():
         reminder_to_send = reminder[2]
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
 
+
 def ping():
     requests.get(config.APP_URL)
 
 ''' End of Jobs '''
 
 def main():
-    """Deployment"""
     scheduler.add_job(ping, 'interval', minutes=5)
     scheduler.add_job(reminder_job, 'interval', minutes=1)
     scheduler.start()
     db.setup()
     updater = Updater(config.TOKEN)
+
+    ''' Deployment '''
     updater.start_webhook(listen="0.0.0.0", port=config.PORT, url_path=config.TOKEN)
     
     dp = updater.dispatcher
@@ -206,47 +222,14 @@ def main():
     # log all errors
     dp.add_error_handler(error)
 
-    updater.bot.set_webhook(config.APP_URL + config.TOKEN)
-    updater.idle()
-
-    """Development"""
-    # scheduler.add_job(ping, 'interval', minutes=5)
-    # scheduler.add_job(reminder_job, 'interval', minutes=1)
-    # scheduler.start()
-    # db.setup()
-
-    # updater = Updater(config.TOKEN)
-    
-    # dp = updater.dispatcher
-
-    # # Add conversation handler with the states DATE and TIME
-    # conv_handler = ConversationHandler(
-    #     entry_points=[CommandHandler('remind', remind)],
-
-    #     states={
-    #         DATE: [CallbackQueryHandler(date_handler)],
-
-    #         TIME: [RegexHandler('^(0[0-9]|1[0-9]|2[0-3]|[0-9]):[0-5][0-9]$', time)]
-    #     },
-
-    #     fallbacks=[CommandHandler('cancel', cancel)]
-    # )
-
-    # dp.add_handler(conv_handler)
-
-    # # on different commands - answer in Telegram
-    # dp.add_handler(CommandHandler("start", start))
-    # dp.add_handler(CommandHandler("help", help))
-    # dp.add_handler(CommandHandler("delete", delete))
-    # dp.add_handler(CommandHandler("list", list_all))
-
-    # # log all errors
-    # dp.add_error_handler(error)
-
-    # # Start the Bot
+    ''' Development '''
     # updater.start_polling()
 
-    # updater.idle()
+    ''' Deployment '''
+    updater.bot.set_webhook(config.APP_URL + config.TOKEN)
+
+    updater.idle()
+
 
 if __name__ == '__main__':
     print ('Bot is running')
