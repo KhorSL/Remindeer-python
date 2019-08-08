@@ -138,15 +138,18 @@ def delete(bot, update):
         reminders = db.get_reminders(chat_id)
         user_input = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
         index = int(user_input, 10)
-        reminder_id = reminders[index - 1][0]
-        db.delete_reminder_by_id(reminder_id, chat_id)
-        update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
+        if index > 0
+            reminder_id = reminders[index - 1][0]
+            db.delete_reminder_by_id(reminder_id, chat_id)
+            update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
+        else:
+            update.message.reply_text('Please input a positive integer greater than zero.')
     except IndexError:
         update.message.reply_text('Index not found.')
     except ValueError:
-        update.message.reply_text('Please input an integer.')
+        update.message.reply_text('Please input a positive integer greater than zero.')
     except AttributeError:
-        update.message.reply_text('Please input an integer.')
+        update.message.reply_text('Please input a positive integer greater than zero.')
     except Exception:
         update.message.reply_text('An error occurred, reminder was not deleted.')
 
