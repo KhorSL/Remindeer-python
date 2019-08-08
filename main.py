@@ -138,7 +138,7 @@ def delete(bot, update):
         reminders = db.get_reminders(chat_id)
         user_input = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
         index = int(user_input, 10)
-        if index > 0
+        if index > 0:
             reminder_id = reminders[index - 1][0]
             db.delete_reminder_by_id(reminder_id, chat_id)
             update.message.reply_text('`' + reminders[index - 1][2] + '`' + ' deleted')
