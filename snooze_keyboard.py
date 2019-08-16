@@ -21,8 +21,8 @@ def convert_seconds(time_val):
 
 
 def process_snooze_selection(snooze_seconds):
-    print ("Datetime with DEFAULT_TZ: %s" % (config.DEFAULT_TZ))
-    return datetime.now(config.DEFAULT_TZ) + timedelta(seconds=int(snooze_seconds))
+    print ("Datetime with DEFAULT_TZ: %s" % (str(datetime.now(config.DEFAULT_TZ))))
+    return datetime.now() + timedelta(seconds=int(snooze_seconds), hours=8)
 
 
 def create_keyboard(reminder_id):

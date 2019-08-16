@@ -194,6 +194,7 @@ def error(bot, update, error):
 
 def reminder_job():
     bot = Bot(config.TOKEN)
+    print ("Getting reminders around %s" % (str(datetime.now(config.DEFAULT_TZ))))
     reminders_to_send = db.get_reminders_around_time(datetime.now(config.DEFAULT_TZ))
 
     for reminder in reminders_to_send:
