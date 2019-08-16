@@ -19,8 +19,8 @@ def convert_seconds(time_val):
         return num * 60 * 60 * 24 * 7
 
 
-def process_snooze_selection(snooze_seconds):
-    return datetime.now() + timedelta(seconds=int(snooze_seconds))
+def process_snooze_selection(snooze_seconds, tz):
+    return datetime.now(tz) + timedelta(seconds=int(snooze_seconds))
 
 
 def create_keyboard(reminder_id):

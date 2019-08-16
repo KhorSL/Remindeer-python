@@ -1,7 +1,6 @@
 import os, requests, re, time, logging
 
 from datetime import datetime, timedelta
-from pytz import timezone
 from configparser import ConfigParser
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, ParseMode
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQueryHandler, ConversationHandler, RegexHandler
@@ -74,7 +73,7 @@ def callback_handler(bot, update):
     if snooze_callback_match:
         try:
             reminder_text = re.match(". Reminder Alert .\s+(.*)", query.message.text).group(1)
-            snooze_timestamp = snooze.process_snooze_selection(snooze_callback_match.group(1))
+            snooze_timestamp = snooze.process_snooze_selection(snooze_callback_match.group(1), config.DEFAULT_TZ)
             reminder_id = snooze_callback_match.group(2)
 
             db.update_reminder_date(snooze_timestamp, reminder_id)
@@ -195,7 +194,7 @@ def error(bot, update, error):
 
 def reminder_job():
     bot = Bot(config.TOKEN)
-    reminders_to_send = db.get_reminders_around_time(datetime.now(timezone('Asia/Singapore')))
+    reminders_to_send = db.get_reminders_around_time(datetime.now(config.DEFAULT_TZ))
 
     for reminder in reminders_to_send:
         chat_id = reminder[1]
