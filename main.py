@@ -73,7 +73,7 @@ def callback_handler(bot, update):
     if snooze_callback_match:
         try:
             reminder_text = re.match(". Reminder Alert .\s+(.*)", query.message.text).group(1)
-            snooze_timestamp = snooze.process_snooze_selection(snooze_callback_match.group(1), config.DEFAULT_TZ)
+            snooze_timestamp = snooze.process_snooze_selection(snooze_callback_match.group(1))
             reminder_id = snooze_callback_match.group(2)
 
             db.update_reminder_date(snooze_timestamp, reminder_id)

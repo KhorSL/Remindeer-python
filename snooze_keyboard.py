@@ -1,6 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from datetime import datetime, timedelta
 import calendar
+import config
 
 def create_callback_data(time_item, reminder_id):
     return "SNOOZE;" + str(convert_seconds(time_item)) + ";" + str(reminder_id)
@@ -19,8 +20,9 @@ def convert_seconds(time_val):
         return num * 60 * 60 * 24 * 7
 
 
-def process_snooze_selection(snooze_seconds, tz):
-    return datetime.now(tz) + timedelta(seconds=int(snooze_seconds))
+def process_snooze_selection(snooze_seconds):
+    print ("Datetime with DEFAULT_TZ: %s" % (config.DEFAULT_TZ))
+    return datetime.now(config.DEFAULT_TZ) + timedelta(seconds=int(snooze_seconds))
 
 
 def create_keyboard(reminder_id):
