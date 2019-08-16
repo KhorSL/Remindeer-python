@@ -119,6 +119,14 @@ class Database:
 
 
     @db_query_handler
+    def update_reminder_date(self, input_time, reminder_id):
+        stmt = "UPDATE reminders SET reminder_time = (%s) WHERE id = (%s)"
+        args = (input_time, reminder_id, )
+        self.cursor.execute(stmt, args)
+        self.conn.commit()
+
+
+    @db_query_handler
     def add_intermediate_reminder(self, input_text, chat_id):
         stmt = "INSERT INTO intermediate (reminder_text, chat_id) VALUES (%s, %s)"
         args = (input_text, chat_id, )

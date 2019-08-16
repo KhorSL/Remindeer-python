@@ -1,6 +1,7 @@
 import os, requests, re, time, logging
 
 from datetime import datetime, timedelta
+from pytz import timezone
 from configparser import ConfigParser
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, ParseMode
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQueryHandler, ConversationHandler, RegexHandler
@@ -8,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 import telegramcalendar
 import config
+import snooze_keyboard as snooze
 
 from database import Database
 
@@ -50,19 +52,38 @@ def reply_user(update, reminders):
 
 ''' Handlers '''
 
-def date_handler(bot, update):
+def callback_handler(bot, update):
     query = update.callback_query
+    chat_id = query.message.chat_id
+    message_id = query.message.message_id
 
-    selected, date = telegramcalendar.process_calendar_selection(bot, update)
+    # Calendar
+    if re.match("[\w-]+;[\d]{4};[\d]{1,2};[\d]{1,2}", query.data):
+        selected, date = telegramcalendar.process_calendar_selection(bot, update)
 
-    if selected:
-        chat_id = query.message.chat_id
-        db.update_intermediate_reminder_date(date, chat_id)
-        bot.send_message(text="You selected *%s* as the day of reminder. \n \n"
-            "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d %b %Y, %a")), 
-            chat_id=chat_id, reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN)
-        
-        return TIME
+        if selected:
+            db.update_intermediate_reminder_date(date, chat_id)
+            bot.send_message(text="You selected *%s* as the day of reminder. \n \n"
+                "Please give me the time of reminder in 24 hours format (e.g. 23:59)" % (date.strftime("%d %b %Y, %a")), 
+                chat_id=chat_id, reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN)
+            
+            return TIME
+
+    # Snooze
+    snooze_callback_match = re.match("SNOOZE;(\d+);(\d+)", query.data)
+    if snooze_callback_match:
+        try:
+            reminder_text = re.match(". Reminder Alert .\s+(.*)", query.message.text).group(1)
+            snooze_timestamp = snooze.process_snooze_selection(snooze_callback_match.group(1))
+            reminder_id = snooze_callback_match.group(2)
+
+            db.update_reminder_date(snooze_timestamp, reminder_id)
+
+            bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
+            bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")), 
+                chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
+        except Exception:
+            bot.send_message(text="You snooze, you lose.", chat_id=chat_id)
 
 
 def start(bot, update):
@@ -86,10 +107,7 @@ def remind(bot, update):
         db.add_intermediate_reminder(input_reminder, chat_id)
 
         reminders = db.get_reminders_text(chat_id)
-        if input in reminders:
-            pass
-        else:
-            update.message.reply_text("\U0001F4C5 Please select a date \U0001F4C5", reply_markup=telegramcalendar.create_calendar())
+        update.message.reply_text("\U0001F4C5 Please select a date \U0001F4C5", reply_markup=telegramcalendar.create_calendar())
 
         return DATE
     except AttributeError:
@@ -177,12 +195,14 @@ def error(bot, update, error):
 
 def reminder_job():
     bot = Bot(config.TOKEN)
-    reminders_to_send = db.get_reminders_around_time(datetime.now() + timedelta(hours=8))
+    reminders_to_send = db.get_reminders_around_time(datetime.now(timezone('Asia/Singapore')))
 
     for reminder in reminders_to_send:
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send, chat_id=chat_id)
+        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send,
+            chat_id=chat_id, 
+            reply_markup=snooze.create_keyboard(reminder[0]))
 
 
 def ping():
@@ -202,12 +222,14 @@ def main():
     
     dp = updater.dispatcher
 
+    callback_query_handler = CallbackQueryHandler(callback_handler)
+
     # Add conversation handler with the states DATE and TIME
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('remind', remind)],
 
         states={
-            DATE: [CallbackQueryHandler(date_handler)],
+            DATE: [callback_query_handler],
 
             TIME: [RegexHandler('^(0[0-9]|1[0-9]|2[0-3]|[0-9]):[0-5][0-9]$', time)]
         },
@@ -221,6 +243,7 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
+    dp.add_handler(callback_query_handler)
 
     # log all errors
     dp.add_error_handler(error)
