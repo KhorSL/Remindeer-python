@@ -31,7 +31,7 @@ HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
                 + 'To see all reminders: \n\n /list \n\n' \
                 + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
-SEPARATOR = "\n\n====================\n\n"
+SEPARATOR = "\n\n*⑅*❀⑅*❀⑅*❀⑅*❀⑅*❀⑅*\n\n"
 
 '''Helper methods'''
 
@@ -212,8 +212,9 @@ def reminder_job():
         # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send + SEPARATOR,
-            chat_id=chat_id, 
+        bot.send_message(text='\u23F0 *Reminder Alert*\n\n```%s```\n\n%s' % (reminder_to_send, SEPARATOR),
+            chat_id=chat_id,
+            parse_mode=ParseMode.MARKDOWN,
             reply_markup=snooze.create_keyboard(reminder[0]))
 
 
@@ -224,7 +225,7 @@ def ping():
 
 def main():
     scheduler.add_job(ping, 'interval', minutes=5)
-    scheduler.add_job(reminder_job, 'interval', minutes=1)
+    scheduler.add_job(reminder_job, 'interval', minutes=1, start_date=datetime.now().replace(second=0, microsecond=0))
     scheduler.start()
     db.setup()
     updater = Updater(config.TOKEN)
