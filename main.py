@@ -31,7 +31,7 @@ HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
                 + 'To see all reminders: \n\n /list \n\n' \
                 + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
-SEPARATOR = "\n\n*⑅*❀⑅*❀⑅*❀⑅*❀⑅*❀⑅*\n\n"
+SEPARATOR = "\n\n====================\n\n"
 
 '''Helper methods'''
 
