@@ -225,7 +225,7 @@ def ping():
 
 def main():
     scheduler.add_job(ping, 'interval', minutes=5)
-    scheduler.add_job(reminder_job, 'interval', minutes=1, start_date=datetime.now().replace(second=0, microsecond=0))
+    scheduler.add_job(reminder_job, 'interval', minutes=1, start_date=datetime.now().replace(second=0, microsecond=0) + timedelta(seconds=1)
     scheduler.start()
     db.setup()
     updater = Updater(config.TOKEN)
