@@ -31,6 +31,8 @@ HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
                 + 'To see all reminders: \n\n /list \n\n' \
                 + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
+SEPARATOR = "\n\n====================\n\n"
+
 '''Helper methods'''
 
 def numbering_list(input_list):
@@ -187,7 +189,8 @@ def list_all(bot, update):
     reminders = db.get_reminders_text_and_time(chat_id)
     reminders_to_list = []
     for reminder in reminders:
-        reminders_to_list.append("*" + reminder[0] + "*\n\n" + reminder[1].strftime("%d %b %Y, %a, %I:%M %p") + "\n\n")
+        reminder_datetime = reminder[1].astimezone(config.DEFAULT_TZ)
+        reminders_to_list.append("*" + reminder[0] + "*\n\n" + reminder_datetime.strftime("%d %b %Y, %a, %I:%M %p") + "\n\n")
     reply_user(update, reminders_to_list)
 
 
@@ -209,7 +212,7 @@ def reminder_job():
         # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send,
+        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send + SEPARATOR,
             chat_id=chat_id, 
             reply_markup=snooze.create_keyboard(reminder[0]))
 
