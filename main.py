@@ -86,7 +86,8 @@ def callback_handler(bot, update):
             bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
             bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")), 
                 chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
-        except Exception:
+        except Exception as e:
+            print (str(e))
             bot.send_message(text="You snooze, you lose.", chat_id=chat_id)
 
 
@@ -212,9 +213,8 @@ def reminder_job():
         # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 *Reminder Alert*\n\n' + reminder_to_send + SEPARATOR,
+        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send + SEPARATOR,
             chat_id=chat_id,
-            parse_mode=ParseMode.MARKDOWN,
             reply_markup=snooze.create_keyboard(reminder[0]))
 
 
