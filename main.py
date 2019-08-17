@@ -212,7 +212,7 @@ def reminder_job():
         # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 *Reminder Alert*\n\n```%s```\n\n%s' % (reminder_to_send, SEPARATOR),
+        bot.send_message(text='\u23F0 *Reminder Alert*\n\n' + reminder_to_send + SEPARATOR,
             chat_id=chat_id,
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=snooze.create_keyboard(reminder[0]))
