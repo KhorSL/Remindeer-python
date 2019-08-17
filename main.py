@@ -78,6 +78,9 @@ def callback_handler(bot, update):
 
             db.update_reminder_date(snooze_timestamp, reminder_id)
 
+            # Conversion of default TZ for user readability
+            snooze_timestamp = snooze_timestamp.astimezone(config.DEFAULT_TZ)
+
             bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
             bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")), 
                 chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
@@ -123,13 +126,18 @@ def time(bot, update):
     # Retrieve and remove user input from intermediate table
     intermediate = db.get_intermediate(chat_id)
     input_reminder = intermediate[2]
+
+    # Creating datetime with default timezone
     date = str(intermediate[3]) + " " + time
+    date = datetime.strptime(date, '%Y-%m-%d %H:%M')
+    date = config.DEFAULT_TZ.localize(date)
+
     db.delete_intermediate(chat_id)
 
     db.add_reminder(input_reminder, chat_id, date)
     reminders = db.get_reminders_text(chat_id)
 
-    confirmation_message = "Reminder set on " + date
+    confirmation_message = "Reminder set on " + date.strftime('%Y-%m-%d %H:%M')
     bot.send_message(text=confirmation_message, chat_id=chat_id, reply_markup=ReplyKeyboardRemove())
 
     if len(reminders) > 0:
@@ -195,9 +203,10 @@ def error(bot, update, error):
 def reminder_job():
     bot = Bot(config.TOKEN)
     print ("Getting reminders around %s" % (str(datetime.now(config.DEFAULT_TZ))))
-    reminders_to_send = db.get_reminders_around_time(datetime.now(config.DEFAULT_TZ))
+    reminders_to_send = db.get_reminders_around_time(datetime.now())
 
     for reminder in reminders_to_send:
+        # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
         bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send,

@@ -93,20 +93,9 @@ class Database:
 
 
     @db_query_handler
-    def get_reminders_to_send(self, input_time):
-        stmt = "SELECT * FROM reminders WHERE reminder_time = (%s)"
-        input_time = input_time.strftime("%Y-%m-%d, %H:%M") + ":00"
-        args = (input_time, )
-        self.cursor.execute(stmt, args)
-        return self.cursor.fetchall()
-
-
-    @db_query_handler
     def get_reminders_around_time(self, input_time):
-        stmt = "SELECT * FROM reminders WHERE reminder_time BETWEEN TO_TIMESTAMP((%s), \'YYYY/MM/DD HH24:MI:SS\') - INTERVAL \'1 minutes\' AND TO_TIMESTAMP((%s), 'YYYY/MM/DD HH24:MI:SS') + INTERVAL \'1 minutes\';"
-        input_time = input_time.strftime("%Y-%m-%d, %H:%M") + ":00"
-        print (input_time)
-        args = (input_time, input_time, )
+        stmt = "SELECT * FROM reminders WHERE DATE_TRUNC('minute', reminder_time::TIMESTAMP) = DATE_TRUNC('minute', %s::TIMESTAMP);"
+        args = (input_time, )
         self.cursor.execute(stmt, args)
         return self.cursor.fetchall()
 
