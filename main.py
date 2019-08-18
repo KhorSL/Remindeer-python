@@ -32,8 +32,6 @@ HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
                 + 'To see all reminders: \n\n /list \n\n' \
                 + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
-SNOOZE_MESSAGE = "\n\n Snooze or Lose? Make a choice - \n\n"
-
 '''Helper methods'''
 
 def numbering_list(input_list):
@@ -83,16 +81,16 @@ def callback_handler(bot, update):
             
             return TIME
 
-    ''' Snooze
+    ''' Alert
 
-        1. All Snooze callback query data will contain the prefix `SNOOZE`.
+        1. All Alert callback query data will contain the prefix `ALERT`.
         2. The callback query data paramaters are seperated by semi-colon `;`
         3. The reminder id should always be the first paramater
 
         4. The format of the callback query data will be as such:
-            SNOOZE;[reminder id];[other parameter/actions]+
+            ALERT;[reminder id];[other parameter/actions]+
     '''
-    snooze_cmd_match = re.match("SNOOZE;(.+)", query.data)
+    snooze_cmd_match = re.match("ALERT;(.+)", query.data)
     if snooze_cmd_match:
         try:
             params = snooze_cmd_match.group(1)
@@ -101,17 +99,29 @@ def callback_handler(bot, update):
             if db.reminder_exists(reminder_id):
                 reminder_text = db.get_reminders_text_by_id(reminder_id)
                 reminder_text = truncate_string(reminder_text, 20)
-                if re.match("(\d+);(\d+)", params):
-                  snooze_timestamp = reminder_alert.process_snooze_selection(params_array[1])
 
-                  db.update_reminder_date(snooze_timestamp, reminder_id)
+                if re.match("^(\d+);SNOOZE$", params):
+                    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
+                        reply_markup=reminder_alert.create_snooze_keyboard(reminder_id))
 
-                  # Conversion of default TZ for user readability
-                  snooze_timestamp = snooze_timestamp.astimezone(config.DEFAULT_TZ)
 
-                  bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
-                  bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")), 
-                      chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
+                if re.match("^(\d+);(SNOOZE-BACK)$", params):
+                    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
+                        reply_markup=reminder_alert.create_selection_keyboard(reminder_id))
+
+
+                if re.match("^(\d+);SNOOZE;(\d+)$", params):
+                    # params_arrary[reminder_id, 'SNOOZE', seconds]
+                    snooze_timestamp = reminder_alert.process_snooze_selection(params_array[2])
+
+                    db.update_reminder_date(snooze_timestamp, reminder_id)
+
+                    # Conversion of default TZ for user readability
+                    snooze_timestamp = snooze_timestamp.astimezone(config.DEFAULT_TZ)
+
+                    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
+                    bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")),
+                        chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
 
 
                 if re.match("^(\d+);DELETE$", params):
@@ -265,7 +275,7 @@ def reminder_job():
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
         reminder_to_send = textwrap.fill(reminder_to_send, initial_indent='>>>  ', subsequent_indent='>>>  ', width=38)
-        bot.send_message(text='%s Reminder Alert %s \n\n%s%s' % (emoji.CLOCK, emoji.CLOCK, reminder_to_send, SNOOZE_MESSAGE),
+        bot.send_message(text='%s Reminder Alert %s \n\n%s' % (emoji.CLOCK, emoji.CLOCK, reminder_to_send),
             chat_id=chat_id,
             reply_markup=reminder_alert.create_selection_keyboard(reminder[0]))
 

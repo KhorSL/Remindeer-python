@@ -12,7 +12,7 @@ import lib.emoji as emoji
 '''
 
 def create_snooze_callback_data(time_item, reminder_id):
-    return "SNOOZE;" + str(reminder_id) + ";" + str(convert_seconds(time_item))
+    return "ALERT;" + str(reminder_id) + ";SNOOZE;" + str(convert_seconds(time_item))
 
 
 def convert_seconds(time_val):
@@ -41,14 +41,22 @@ def process_snooze_selection(snooze_seconds):
 
 def create_selection_keyboard(reminder_id):
     keyboard = []
-    minute_row = ["1m", "5 m", "10 m", "15 m", "30 m"]
+
+    snooze_row = [InlineKeyboardButton("%s Snooze" % (emoji.SLEEP_SYM), callback_data="ALERT;%s;SNOOZE" % (reminder_id))]
+    delete_row = [InlineKeyboardButton("%s Delete" % (emoji.RUBBISH_BIN), callback_data="ALERT;%s;DELETE" % (reminder_id))]
+
+    keyboard.append(snooze_row)
+    keyboard.append(delete_row)
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_snooze_keyboard(reminder_id):
+    keyboard = [ [InlineKeyboardButton("For how long?", callback_data="IGNORE;%s" % (reminder_id))] ]
+    minute_row = ["1 m", "5 m", "10 m", "15 m", "30 m"]
     hour_row = ["1 h", "2 h", "4 h", "8 h"]
     day_row = ["1 d", "2 d", "3 d"]
     week_row = ["1 w"]
-
-    empty_row = [InlineKeyboardButton(" ", callback_data="IGNORE;%s" % (reminder_id))]
-
-    delete_row = [InlineKeyboardButton("%s Delete" % (emoji.RUBBISH_BIN), callback_data="SNOOZE;%s;DELETE" % (reminder_id))]
 
     rows = [minute_row, hour_row, day_row, week_row]
 
@@ -58,8 +66,8 @@ def create_selection_keyboard(reminder_id):
             temp_row.append(InlineKeyboardButton(item, callback_data=create_snooze_callback_data(item, reminder_id)))
         keyboard.append(temp_row)
 
-    keyboard.append(empty_row)
-    keyboard.append(delete_row)
+    back_row = [InlineKeyboardButton("%s Back" % (emoji.LEFT_ARROW), callback_data="ALERT;%s;SNOOZE-BACK" % (reminder_id))]
+    keyboard.append(back_row)
 
     return InlineKeyboardMarkup(keyboard)
 
@@ -68,8 +76,8 @@ def create_confirmation_keyboard(reminder_id):
     keyboard = [
                 [InlineKeyboardButton("Are you sure?", callback_data="IGNORE;%s" % (reminder_id))],
                 [
-                    InlineKeyboardButton(emoji.GREEN_TICK, callback_data="SNOOZE;%s;DELETE-Y" % (reminder_id)),
-                    InlineKeyboardButton(emoji.RED_X_CROSS, callback_data="SNOOZE;%s;DELETE-N" % (reminder_id))
+                    InlineKeyboardButton(emoji.GREEN_TICK, callback_data="ALERT;%s;DELETE-Y" % (reminder_id)),
+                    InlineKeyboardButton(emoji.RED_X_CROSS, callback_data="ALERT;%s;DELETE-N" % (reminder_id))
                 ]
     ]
 
