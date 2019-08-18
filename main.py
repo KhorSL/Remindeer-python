@@ -264,7 +264,7 @@ def reminder_job():
         # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        reminder_to_send = textwrap.fill(reminder_to_send, initial_indent='>>>  ', subsequent_indent='>>>  ', width=40)
+        reminder_to_send = textwrap.fill(reminder_to_send, initial_indent='>>>  ', subsequent_indent='>>>  ', width=38)
         bot.send_message(text='%s Reminder Alert %s \n\n%s%s' % (emoji.CLOCK, emoji.CLOCK, reminder_to_send, SNOOZE_MESSAGE),
             chat_id=chat_id,
             reply_markup=reminder_alert.create_selection_keyboard(reminder[0]))
