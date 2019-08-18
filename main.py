@@ -1,4 +1,4 @@
-import os, requests, re, time, logging
+import os, requests, re, time, logging, textwrap
 
 from datetime import datetime, timedelta
 from configparser import ConfigParser
@@ -6,9 +6,10 @@ from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeybo
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQueryHandler, ConversationHandler, RegexHandler
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import telegramcalendar
+import keyboards.telegramcalendar as telegramcalendar
 import config
-import snooze_keyboard as snooze
+import keyboards.reminder_alert as reminder_alert
+import lib.emoji as emoji
 
 from database import Database
 
@@ -31,12 +32,12 @@ HELP_MESSAGE = 'To add a reminder: \n\n /remind [reminder] \n\n' \
                 + 'To see all reminders: \n\n /list \n\n' \
                 + 'To delete a reminder (index is the number seen after the /list command): \n\n /delete [index]'
 
-SEPARATOR = "\n\n====================\n\n"
+SNOOZE_MESSAGE = "\n\n Snooze or Lose? Make a choice - \n\n"
 
 '''Helper methods'''
 
 def numbering_list(input_list):
-    result = "\U0001F4DD Your current reminders:\n\n"
+    result = "%s Your current reminders:\n\n" % (emoji.MEMO)
     for i in range(len(input_list)):
         result = result + str(i+1) + ". " + input_list[i] + "\n"
     return result
@@ -48,6 +49,18 @@ def reply_user(update, reminders):
     else:
         message = "There are no reminders in your list."
         update.message.reply_text(message)
+
+''' def truncate_string(str, num_char)
+
+    This method truncate the string to the specified number of characters
+
+    argument: (String, int)
+    return: String
+
+'''
+
+def truncate_string(input_string, num_char):
+    return input_string[:num_char] + (input_string[num_char:] and '...')
 
 '''End of Helper Methods'''
 
@@ -70,34 +83,71 @@ def callback_handler(bot, update):
             
             return TIME
 
-    # Snooze
-    snooze_callback_match = re.match("SNOOZE;(\d+);(\d+)", query.data)
-    if snooze_callback_match:
+    ''' Snooze
+
+        1. All Snooze callback query data will contain the prefix `SNOOZE`.
+        2. The callback query data paramaters are seperated by semi-colon `;`
+        3. The reminder id should always be the first paramater
+
+        4. The format of the callback query data will be as such:
+            SNOOZE;[reminder id];[other parameter/actions]+
+    '''
+    snooze_cmd_match = re.match("SNOOZE;(.+)", query.data)
+    if snooze_cmd_match:
         try:
-            reminder_text = re.match(". Reminder Alert .\s+(.*)", query.message.text).group(1)
-            snooze_timestamp = snooze.process_snooze_selection(snooze_callback_match.group(1))
-            reminder_id = snooze_callback_match.group(2)
+            params = snooze_cmd_match.group(1)
+            params_array = params.split(';')
+            reminder_id = params_array[0]
+            if db.reminder_exists(reminder_id):
+                reminder_text = db.get_reminders_text_by_id(reminder_id)
+                reminder_text = truncate_string(reminder_text, 20)
+                if re.match("(\d+);(\d+)", params):
+                  snooze_timestamp = reminder_alert.process_snooze_selection(params_array[1])
 
-            db.update_reminder_date(snooze_timestamp, reminder_id)
+                  db.update_reminder_date(snooze_timestamp, reminder_id)
 
-            # Conversion of default TZ for user readability
-            snooze_timestamp = snooze_timestamp.astimezone(config.DEFAULT_TZ)
+                  # Conversion of default TZ for user readability
+                  snooze_timestamp = snooze_timestamp.astimezone(config.DEFAULT_TZ)
 
-            bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
-            bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")), 
-                chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
+                  bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
+                  bot.send_message(text="Snoozing \"%s\" until *%s*" % (reminder_text, snooze_timestamp.strftime("%d %b %Y, %a, %I:%M %p")), 
+                      chat_id=chat_id, parse_mode=ParseMode.MARKDOWN)
+
+
+                if re.match("^(\d+);DELETE$", params):
+                    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, 
+                        reply_markup=reminder_alert.create_confirmation_keyboard(reminder_id))
+
+
+                if re.match("(\d+);(DELETE-Y|DELETE-N)", params):
+                    if params_array[1] == "DELETE-Y":
+                        db.delete_reminder_by_id(reminder_id, chat_id)
+                        bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
+                        bot.send_message(text="`%s` deleted" % (reminder_text), chat_id=chat_id)
+                    else:
+                        bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
+                            reply_markup=reminder_alert.create_selection_keyboard(reminder_id))
+                                    
+            else:
+                bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
+                bot.send_message(text="Reminder does not exist.", chat_id=chat_id)
+
         except Exception as e:
             print (str(e))
-            bot.send_message(text="You snooze, you lose.", chat_id=chat_id)
+            fast_clicker_message_excerpt = "exactly the same"
+            if fast_clicker_message_excerpt in str(e): 
+                bot.send_message(text="You are clicking too fast.", chat_id=chat_id)
+            else:
+                bot.send_message(text="You snooze, you lose.", chat_id=chat_id)
 
 
 def start(bot, update):
     chat_id = update.message.chat_id
-    update.message.reply_text('Hi there! \U0001F60A \n\n' + HELP_MESSAGE)
+    update.message.reply_text('Hi there! %s \n\n %s' % (emoji.SMILING_EYES, HELP_MESSAGE))
 
 
 def help(bot, update):
-    update.message.reply_text('Sending help now \U0001F60A \n\n' + HELP_MESSAGE)
+    update.message.reply_text('Sending help now %s \n\n %s' % (emoji.SMILING_EYES, HELP_MESSAGE))
 
 
 def remind(bot, update):
@@ -112,7 +162,8 @@ def remind(bot, update):
         db.add_intermediate_reminder(input_reminder, chat_id)
 
         reminders = db.get_reminders_text(chat_id)
-        update.message.reply_text("\U0001F4C5 Please select a date \U0001F4C5", reply_markup=telegramcalendar.create_calendar())
+        update.message.reply_text("%s Please select a date %s" % (emoji.CALENDAR, emoji.CALENDAR),
+            reply_markup=telegramcalendar.create_calendar())
 
         return DATE
     except AttributeError:
@@ -213,9 +264,10 @@ def reminder_job():
         # reminder(id, chat_id, text, time)
         chat_id = reminder[1]
         reminder_to_send = reminder[2]
-        bot.send_message(text='\u23F0 Reminder Alert \u23F0 \n\n' + reminder_to_send + SEPARATOR,
+        reminder_to_send = textwrap.fill(reminder_to_send, initial_indent='>>>  ', subsequent_indent='>>>  ', width=40)
+        bot.send_message(text='%s Reminder Alert %s \n\n%s%s' % (emoji.CLOCK, emoji.CLOCK, reminder_to_send, SNOOZE_MESSAGE),
             chat_id=chat_id,
-            reply_markup=snooze.create_keyboard(reminder[0]))
+            reply_markup=reminder_alert.create_selection_keyboard(reminder[0]))
 
 
 def ping():

@@ -24,7 +24,7 @@ class Database:
 
         """Development"""
         # self.conn = psycopg2.connect(user = user, password = password, host = host, port = port, database = dbname)
-        
+
         """Deployment"""
         self.conn = psycopg2.connect(config.DATABASE_URL, sslmode='require')
 
@@ -42,6 +42,14 @@ class Database:
         self.cursor.execute(table_reminders)
         self.cursor.execute(table_intermediate)
         self.conn.commit()
+
+
+    @db_query_handler
+    def reminder_exists(self, reminder_id):
+        stmt = "SELECT EXISTS(SELECT 1 FROM reminders WHERE id = (%s))"
+        args = (reminder_id, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()[0][0]
 
 
     @db_query_handler
@@ -74,6 +82,14 @@ class Database:
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         return [x[0] for x in self.cursor.fetchall()]
+
+
+    @db_query_handler
+    def get_reminders_text_by_id(self, reminder_id):
+        stmt = "SELECT reminder_text FROM reminders WHERE id = (%s)"
+        args = (reminder_id, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()[0][0]
 
 
     @db_query_handler
