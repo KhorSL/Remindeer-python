@@ -7,8 +7,9 @@ from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackQu
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import keyboards.telegramcalendar as telegramcalendar
-import config
 import keyboards.reminder_alert as reminder_alert
+import keyboards.date_shortcut as date_shortcut
+import config
 import lib.emoji as emoji
 
 from database import Database
@@ -68,6 +69,14 @@ def callback_handler(bot, update):
     query = update.callback_query
     chat_id = query.message.chat_id
     message_id = query.message.message_id
+
+    ## Select Calendar
+    if re.match("SELECT;CALENDAR", query.data):
+        try:
+            bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
+                reply_markup=telegramcalendar.create_calendar())
+        except Exception as e:
+            print (str(e))
 
     # Calendar
     if re.match("[\w-]+;[\d]{4};[\d]{1,2};[\d]{1,2}", query.data):
@@ -173,12 +182,14 @@ def remind(bot, update):
 
         reminders = db.get_reminders_text(chat_id)
         update.message.reply_text("%s Please select a date %s" % (emoji.CALENDAR, emoji.CALENDAR),
-            reply_markup=telegramcalendar.create_calendar())
+            reply_markup=date_shortcut.create_date_shortcut_keyboard())
 
         return DATE
-    except AttributeError:
+    except AttributeError as attr_error:
+        print (str(attr_error))
         update.message.reply_text("Please tell me something to remind you about.")
-    except Exception:
+    except Exception as e:
+        print (str(e))
         update.message.reply_text("Sorry an error had occurred, reminder was not added.")
 
 
