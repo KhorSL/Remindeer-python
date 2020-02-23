@@ -50,7 +50,11 @@ def create_calendar(year=None,month=None):
             if(day==0):
                 row.append(InlineKeyboardButton(" ",callback_data=data_ignore))
             else:
-                row.append(InlineKeyboardButton(str(day),callback_data=create_callback_data("DAY",year,month,day)))
+                ## Asterisk today day date for reference
+                if day == datetime.datetime.today().day and year == datetime.datetime.today().year and month == datetime.datetime.today().month:
+                    row.append(InlineKeyboardButton("%s*" % (str(day)),callback_data=create_callback_data("DAY",year,month,day)))
+                else:
+                    row.append(InlineKeyboardButton(str(day),callback_data=create_callback_data("DAY",year,month,day)))
         keyboard.append(row)
     #Last row - Buttons
     row=[]

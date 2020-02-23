@@ -78,7 +78,7 @@ class Database:
 
     @db_query_handler
     def get_reminders_text(self, chat_id):
-        stmt = "SELECT reminder_text FROM reminders WHERE chat_id = (%s)"
+        stmt = "SELECT reminder_text FROM reminders WHERE chat_id = (%s) ORDER BY reminder_time ASC"
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         return [x[0] for x in self.cursor.fetchall()]
@@ -94,7 +94,7 @@ class Database:
 
     @db_query_handler
     def get_reminders_text_and_time(self, chat_id):
-        stmt = "SELECT reminder_text, reminder_time FROM reminders WHERE chat_id = (%s)"
+        stmt = "SELECT reminder_text, reminder_time FROM reminders WHERE chat_id = (%s) ORDER BY reminder_time ASC"
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         return self.cursor.fetchall()
@@ -102,7 +102,7 @@ class Database:
 
     @db_query_handler
     def get_reminders(self, chat_id):
-        stmt = "SELECT * FROM reminders WHERE chat_id = (%s)"
+        stmt = "SELECT * FROM reminders WHERE chat_id = (%s) ORDER BY reminder_time ASC"
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         return self.cursor.fetchall()
