@@ -13,6 +13,7 @@ import config
 import lib.emoji as emoji
 
 from database import Database
+from auth import Auth
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -272,6 +273,26 @@ def error(bot, update, error):
     print ('Update "%s" caused error "%s"', update, error)
     logger.warning('Update "%s" caused error "%s"', update, error)
 
+
+def gen_key(bot, update):
+    try:
+        chat_id = update.message.chat_id
+        username = re.match("\/[\w]+([@_\w]+|) (.+)", update.message.text).group(2)
+
+        stored_username = db.get_api_username(chat_id)
+        if stored_username:
+            update.message.reply_text("Key generation fail; you already have an existing API key.")
+            return
+
+        api_key = Auth.gen_key()
+        hash_key = Auth.hash_key(api_key)
+        db.insert_api_key(chat_id, username, hash_key)
+
+        update.message.reply_text("Please key your API key safe: `%s`" % (api_key), parse_mode=ParseMode.MARKDOWN)
+    except AttributeError as attr_error:
+        print (str(attr_error))
+        update.message.reply_text("Please input a username of your choice.")
+
 ''' End of Handlers'''
 
 ''' Jobs '''
@@ -329,6 +350,7 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("delete", delete))
     dp.add_handler(CommandHandler("list", list_all))
+    dp.add_handler(CommandHandler("genkey", gen_key))
     dp.add_handler(callback_query_handler)
 
     # log all errors
