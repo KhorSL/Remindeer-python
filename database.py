@@ -161,3 +161,24 @@ class Database:
         args = (chat_id, )
         self.cursor.execute(stmt, args)
         self.conn.commit()
+
+    @db_query_handler
+    def insert_api_key(self, chat_id, username, api_key):
+        stmt = "INSERT INTO user_data (chat_id, username, api_key) VALUES (%s, %s, %s);"
+        args = (chat_id, username, api_key, )
+        self.cursor.execute(stmt, args)
+        self.conn.commit()
+
+    @db_query_handler
+    def get_api_username(self, chat_id):
+        stmt = "SELECT username FROM user_data WHERE chat_id = (%s);"
+        args = (chat_id, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchone()
+
+    @db_query_handler
+    def get_api_hash(self, chat_id):
+        stmt = "SELECT api_key FROM user_data WHERE chat_id = (%s);"
+        args = (chat_id, )
+        self.cursor.execute(stmt, args)
+        return self.cursor.fetchall()[0]        
